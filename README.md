@@ -26,3 +26,5 @@ Once in the join game screen the user will enter the game code which the server 
 EXAMPLE POSSIBILITIES
 The game starts and the users are able to send data to the server
 Pass name and data to the server saying this is the player who did this and this is what they did
+
+https://socket.io/blog/socket-io-on-ios/
