@@ -25,6 +25,8 @@ final class Service: ObservableObject {
     @Published var intMessages = [Int]()
     @Published var intArrayMessages = [[Int]]()
     @Published var messages = [formattedData]()
+    @Published var otherPlayers = [String]()
+    @Published var errorMessages = [String]()
     
     init() {
         let socket = manager.defaultSocket
@@ -37,6 +39,10 @@ final class Service: ObservableObject {
             
             socket.emit("NodeJS Server Port", "Hi node.js server!")
             socket.emit("Create Game", "New Poker Game")
+            /*
+            socket.emit("Join Game", )
+             */
+            socket.emit("Join Game", 1)
         }
         
         /*
@@ -60,6 +66,50 @@ final class Service: ObservableObject {
                 }
             }
         }
+        socket.on("Join Game Successful") { [weak self] (data, ack) in
+            if let data = data[0] as? [String: String],
+               let rawmessage = data["msg"]{
+                DispatchQueue.main.async {
+                    self?.stringMessages.append(rawmessage)
+                }
+            }
+        }
+        socket.on("New Player") { [weak self] (data, ack) in
+            if let data = data[0] as? [String: String],
+                let rawMessage = data["player"]{
+                 DispatchQueue.main.async {
+                     self?.otherPlayers.append(rawMessage)
+                 }
+             }
+            
+        }
+        
+        
+        socket.on("Join Game Invalid") { [weak self] (data, ack) in
+            if let data = data[0] as? [String: String],
+                let rawMessage = data["msg"]{
+                 DispatchQueue.main.async {
+                     self?.errorMessages.append(rawMessage)
+                 }
+             }
+            
+        }
+        /*
+        socket.on("New Player") { [weak self] (data, ack) in
+            print("Should be at new player")
+            if let data = data[0] as? [String: String],
+               let rawmessage = data["player"]{
+                self?.otherPlayers.append(rawmessage)
+                print("SHOULD SHOW THE SOCKET ID")
+                print(rawmessage)
+                DispatchQueue.main.async {
+                    self?.otherPlayers.append(rawmessage)
+                    print("SHOULD SHOW THE SOCKET ID")
+                    print(rawmessage)
+                }
+            }
+        }
+         */
         socket.connect()
     }
 }
@@ -70,9 +120,21 @@ struct ContentView: View {
         VStack {
             Text("Recieved Messages from Node.js: ")
             
+            ForEach(service.otherPlayers, id: \.self) { msg in
+                Text(msg).padding()
+            }
+        
+            
             ForEach(service.stringMessages, id: \.self) { msg in
                 Text(msg).padding()
             }
+            if (service.errorMessages.count > 0){
+                ForEach(service.errorMessages, id: \.self) {msg in
+                    Text(msg).padding()
+                }
+            }
+            
+            
             Spacer()
         }
     }
