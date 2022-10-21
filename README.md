@@ -28,3 +28,29 @@ The game starts and the users are able to send data to the server
 Pass name and data to the server saying this is the player who did this and this is what they did
 
 https://socket.io/blog/socket-io-on-ios/
+
+
+CURRENT CAPABILITIES
+Requirements
+---------------------------------------------------------------------------------------------
+First you need to download cocoapods through https://stackoverflow.com/questions/20755044/how-do-i-install-cocoapods link
+Second you need to add a package manually by going to xcode and adding package with https://github.com/socketio/socket.io-client-swift URL
+Next you need to install node.js
+
+Setup
+---------------------------------------------------------------------------------------------
+Run server.js in simple server file to start the server file running on localhost:3000
+Then run Xcode project
+
+Features
+---------------------------------------------------------------------------------------------
+Server will connect to port 3000 as well as the client
+They will send complete a handshake to establish a connection,
+after a connection is established the server will emit an event to a certain port which the iOS client will then handle
+The client will then send back to the server a create game event with settings of which the server will then recieve and handle and store the data on the server
+The server will add that game to the list of games and add the user who created the game to the user list.
+The server will then send back data for display game of which the client will handle
+Then the client sends back a join game to test functionality
+however the server will recognize that user is already registered in the game and will return the socket id of that user and send back the event join game invalid.
+
+
