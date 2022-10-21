@@ -45,12 +45,12 @@ Then run Xcode project
 Features
 ---------------------------------------------------------------------------------------------
 Server will connect to port 3000 as well as the client
-They will send complete a handshake to establish a connection,
-after a connection is established the server will emit an event to a certain port which the iOS client will then handle
-The client will then send back to the server a create game event with settings of which the server will then recieve and handle and store the data on the server
+They will complete a handshake to establish a connection,
+after a connection is established the server will emit an event to a certain port which the iOS client will then handle.
+The client will then send back to the server a create game event with settings of which the server will then recieve and handle and store the data on the server.
 The server will add that game to the list of games and add the user who created the game to the user list.
-The server will then send back data for display game of which the client will handle
-Then the client sends back a join game to test functionality
+The server will then send back data for display game of which the client will handle.
+Then the client sends back a join game to test functionality,
 however the server will recognize that user is already registered in the game and will return the socket id of that user and send back the event join game invalid.
 
 
