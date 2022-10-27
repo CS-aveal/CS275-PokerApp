@@ -59,7 +59,7 @@ io.sockets.on('connection', function(socket) {
         console.log(newGame1.gameId);
         console.log(newGame1.userList);
         
-        io.sockets.emit('Display Game', {msg: ['Hello', 'World']});
+        io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
     });
     
     socket.on('Join Game', function(data) {

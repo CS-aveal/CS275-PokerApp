@@ -27,6 +27,7 @@ final class Service: ObservableObject {
     @Published var messages = [formattedData]()
     @Published var otherPlayers = [String]()
     @Published var errorMessages = [String]()
+    @Published var gameDetails = [String: String]()
     
     init() {
         let socket = manager.defaultSocket
@@ -56,16 +57,66 @@ final class Service: ObservableObject {
                 }
             }
         }
+        
         socket.on("Display Game") { [weak self] (data, ack) in
-            if let data = data[0] as? [String: [String]],
-               let rawmessage = data["msg"]{
-                DispatchQueue.main.async {
-                    var newData = formattedData()
-                    newData.arrS = rawmessage
-                    self?.messages.append(newData)
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: String]{
+                    if let rawMessage = data["game"]{
+                     DispatchQueue.main.async {
+                         self?.errorMessages.append(rawMessage)
+                     }
+                    }
+                    else if let rawMessage = data["buyin"]{
+                     DispatchQueue.main.async {
+                         self?.errorMessages.append(rawMessage)
+                     }
+                    }
                 }
             }
         }
+         
+        /*
+        socket.on("Display Game") { [weak self] (data, ack) in
+            for elemnt in data{
+                /*
+                if let data = data[elemnt] as? [String: String],
+                   var rawmessage = data[elemnt]{
+                    
+                }
+                 */
+                print(elemnt)
+            }
+         */
+            /*
+            for x in 0...data.count{
+                if let data = data[x] as? [String: String],
+                   var rawmessage = data[x]{
+                    switch rawmessage {
+                    case "game":
+                            DispatchQueue.main.async {
+                                self?.gameDetails["game"] = rawmessage
+                            }
+                    case "buyin":
+                        DispatchQueue.main.async {
+                            
+                        }
+                    case "default":
+                        print("game unable to display")
+                    
+                    }
+                    if (rawmessage == "Poker"){
+                        self?.gameDetails["gameType"] = "Poker"
+                    }
+                    else if (rawmessage == )
+                    
+                }
+                    
+            }
+               
+            
+        }
+    
+        */
         socket.on("Join Game Successful") { [weak self] (data, ack) in
             if let data = data[0] as? [String: String],
                let rawmessage = data["msg"]{
