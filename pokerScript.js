@@ -68,7 +68,7 @@ class PlayerHand{
         this.tripsRank = 0
         this.twoKickers = []
         //straight:
-        var straightHigh = 0
+        this.straightHigh = 0
         //flush:
         this.flushVals = []
         //full house:
@@ -83,18 +83,34 @@ class PlayerHand{
     addCard(card){
         this.hand.push(card);
     }
-    //still needs getRank function and overloaded operators
+    getRank(){
+        //sort hand
+        this.hand.sort(function(a,b){return a.number - b.number});
+        //set rank = highCard with highest 5
+        let handCopy = [...this.hand];
+        for (let c in handCopy.reverse()){
+            if(this.fiveHighest.length < 5){
+                this.fiveHighest.push(handCopy[c]);
+            }
+        }
+        //get card counts, store in dictionary
+        var countDict = {};
+        
+    }
 }
 
-let deck = new Deck();
-deck.shuffle();
-console.log(deck.cardDeck);
-console.log(deck.popTop())
-console.log(deck.cardDeck);
+
 let playerHand = new PlayerHand()
-playerHand.addCard(new Card(1,Suit.club))
+playerHand.addCard(new Card(8,Suit.club))
 playerHand.addCard(new Card(13,Suit.diamond))
-console.log(playerHand)
+playerHand.addCard(new Card(6,Suit.diamond))
+playerHand.addCard(new Card(7,Suit.diamond))
+playerHand.addCard(new Card(10,Suit.diamond))
+playerHand.addCard(new Card(10,Suit.diamond))
+playerHand.addCard(new Card(3,Suit.diamond))
+
+playerHand.getRank()
+console.log(playerHand.fiveHighest)
 
 
 
