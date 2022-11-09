@@ -87,10 +87,10 @@ class PlayerHand{
         //sort hand
         this.hand.sort(function(a,b){return a.number - b.number});
         //set rank = highCard with highest 5
-        let handCopy = [...this.hand];
-        for (let c in handCopy.reverse()){
+        let handRev = [...this.hand];
+        for (let c in handRev.reverse()){
             if(this.fiveHighest.length < 5){
-                this.fiveHighest.push(handCopy[c]);
+                this.fiveHighest.push(handRev[c]);
             }
         }
         //get card counts, store in dictionary
@@ -101,9 +101,25 @@ class PlayerHand{
                 countDict[this.hand[c].number] ++;
             }else{
                 countDict[this.hand[c].number] = 1;
-
             }
         }
+        //check pair
+        for (let c in countDict){
+            if (countDict[c] == 2){
+                if (Number(c) > this.firstPairRank){
+                    this.firstPairRank = c;
+                    this.rank = Rank.pair;
+                }
+            }
+        }
+        if(this.rank == Rank.pair){
+            for(let c in handRev){
+                if(handRev[c].number != this.firstPairRank && this.threeOthers.length < 3 ){
+                    this.threeOthers.push(handRev[c]);
+                }
+            }
+        }
+        //check two pair
     }
 }
 
@@ -112,14 +128,14 @@ let playerHand = new PlayerHand()
 playerHand.addCard(new Card(8,Suit.club))
 playerHand.addCard(new Card(13,Suit.diamond))
 playerHand.addCard(new Card(6,Suit.diamond))
-playerHand.addCard(new Card(7,Suit.diamond))
-playerHand.addCard(new Card(10,Suit.diamond))
+playerHand.addCard(new Card(6,Suit.diamond))
 playerHand.addCard(new Card(10,Suit.diamond))
 playerHand.addCard(new Card(10,Suit.diamond))
 playerHand.addCard(new Card(3,Suit.diamond))
-
 playerHand.getRank()
-
+console.log(playerHand.rank)
+console.log(playerHand.firstPairRank)
+console.log(playerHand.threeOthers)
 
 
 
