@@ -9,6 +9,79 @@ connections = [];
  might want to create the object variable with
  */
 
+function GameIteration(id, code, users, gameRunning) {
+  this.id = id;
+  this.code = code;
+  //userList is going to be a list of items of struct player so it should probably be called playerList
+  //initialize
+  this.userList = [];
+  //debatably default to just the first player/user
+  this.userTurn = users[0];
+  this.round = 0;
+  this.gameRunning = gameRunning;
+}
+
+class GameIteration{
+    
+    constructor(id, code, users, gameRunning){
+        //users is going to be an array of class players
+        this.id = id;
+        this.code = code;
+        this.userList = users;
+        this.userTurn = users[0];
+        this.round = 0;
+        this.gameRunning = gameRunning;
+    }
+    
+    incrementRound(){
+        this.round = this.round + 1;
+    }
+    get playerTurn(){
+        return this.userTurn;
+    }
+    get iD{
+        return this.id;
+    }
+    get code{
+        return this.code;
+    }
+    
+    addPlayer(player){
+        var validPlayer = true
+        for (let i = 0; i < userList.length; i++){
+            if (userList[i].SocketID == player.SocketID){
+                validPlayer = false
+            }
+        }
+        if (validPlayer){
+            this.userList.push(player);
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+}
+
+//create a struct for player
+class Player {
+    
+    constructor(socketID, playerHand) {
+        //player hand is going to be a struct/class that will give your hand
+        this.socketID = socketID;
+        this.playerHand = playerHand;
+    }
+    
+    get PlayerRank{
+        return this.playerHand.getRank;
+    }
+    
+    get SocketID{
+        return this.socketID;
+    }
+    
+    
+}
 
 /* maybe create a struct for each connection to be able to specify the ID of each socket to be able to reference each user*/
 
@@ -18,6 +91,9 @@ gameIdCounter = 0
 maxPlayerCount = 4
 
 gameList = [];
+
+//need this to just be an attribute of game because there could be multiple games going on
+gameRunning = false
 
 
 server.listen(process.env.PORT || 3000);
@@ -39,30 +115,86 @@ io.sockets.on('connection', function(socket) {
     });
     
     socket.on('Create Game', function(data) {
+        //create a player struct for the person creating the game
         console.log(data);
         
+        firstPlayerHand = new PLayerHand();
+        
+        arbitraryPlayer = new Player(socket.id, firstPlayerHand);
+        
         users = [];
-        users.push(socket.id);
+        users.push(arbitraryPlayer);
         
         
-        newGame1 = {
-            code: gameCodeCounter,
-            gameId: gameIdCounter,
-            userList: users
-        }
-        
-        gameList.push(newGame1);
+        gameList[gameList.length] = new GameIteration(gameIdCounter, gameCodeCounter, users, false);
         gameIdCounter += 1;
         gameCodeCounter += 1;
         
-        console.log(newGame1.code);
-        console.log(newGame1.gameId);
-        console.log(newGame1.userList);
+        console.log(gameList[0].id);
+        console.log(gameList[0].code);
+        console.log(gameList[0].userList);
+        
+        //io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
+        var stringOutput = "User ";
+        stringOutput += String(socket.id);
+        stringOutput += " created the game with id ";
+        stringOutput += String(gameIdCounter - 1);
+        io.to(socket.id).emit("Created Game", {msg: stringOutput});
+    });
+    //cannot be a handle event start game is going to have to call a method
+    socket.on('Start Game', function(data) {
+        
+        //onlything needed in start game is the call to the function start game
+        
+        startGame(data);
+        
+        /* this data needs to be inside the start game method*/
+        //Determine who goes first by just letting the host go first
+        //data is going to be the game code
+        //just did less than because it is zero indexed
+        
+        for (let i = 0; i < gameList.length; i++){
+            if (gameList[i].code == data){
+                //Start the game functions
+                gameRunning = true
+                gameList[i].userTurn = gameList[i].users[0]
+                while (gameRunning){
+                    
+                    //emit to the socket that needs to play its turn
+                    playerTurn(gameList[i].userTurn)
+                }
+            }
+            else{
+                //game code was not in the list of games
+            }
+        }
         
         io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
     });
     
+    socket.on('Player Turn Done', function(data) {
+        //this will now need to log the players turn and say it is the next persons turn
+        //do this by
+        
+        //need to get the
+        
+        console.log(data);
+        
+        if (data == "Fold"){
+            if ()
+        }
+        else if (data == "Bet"){
+            
+        }
+        else if (data == ""){
+            
+        }
+        io.sockets.emit('iOS Client Port', {msg: 'Hi iOS Client!'}, {msg1: ['Hello', 'World']});
+    });
+    
     socket.on('Join Game', function(data) {
+        //create a player struct for the person joining the game
+        //will have to see if the player is already in the game before trying to add it as a player struct
         console.log(data);
         /*
          data will be the game code
@@ -98,3 +230,33 @@ io.sockets.on('connection', function(socket) {
         io.sockets.emit('Display Game', {msg: ['Hello', 'World']});
     });
 });
+
+function startGame(gameCode){
+    for (let i = 0; i < gameList.length; i ++){
+        if (gameList[i].code == gameCode) {
+            //This is the game that we want to be starting
+            gameList[i].gameRunning = true;
+            while (gameList[i].gameRunning == true){
+                //find players turn and so fourth
+                if (gameList[i].round == 0){
+                    //only want betting this round
+                    //loop through the list of players and ask for their bet
+                    for (let l = 0; l < gameList[i].userList.length; l++){
+                        var roundString = "Round ";
+                        roundString += String(gameList[i].round);
+                        io.to(gameList[i].userList[l].SocketID).emit("Player Turn", {msg: roundString});
+                    }
+                    
+                }
+                else{
+                    //want the wholething to happen
+                    
+                }
+            }
+        }
+    }
+}
+
+function playerTurn(player) {
+  return p1 * p2;
+}
