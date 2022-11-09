@@ -95,7 +95,15 @@ class PlayerHand{
         }
         //get card counts, store in dictionary
         var countDict = {};
-        
+        for (let c in this.hand){
+            let exists = this.hand[c].number in countDict;
+            if (exists){
+                countDict[this.hand[c].number] ++;
+            }else{
+                countDict[this.hand[c].number] = 1;
+
+            }
+        }
     }
 }
 
@@ -107,10 +115,10 @@ playerHand.addCard(new Card(6,Suit.diamond))
 playerHand.addCard(new Card(7,Suit.diamond))
 playerHand.addCard(new Card(10,Suit.diamond))
 playerHand.addCard(new Card(10,Suit.diamond))
+playerHand.addCard(new Card(10,Suit.diamond))
 playerHand.addCard(new Card(3,Suit.diamond))
 
 playerHand.getRank()
-console.log(playerHand.fiveHighest)
 
 
 
