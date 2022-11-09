@@ -115,7 +115,7 @@ class PlayerHand{
         if(this.rank == Rank.pair){
             for(let c in handRev){
                 if(handRev[c].number != this.firstPairRank && this.threeOthers.length < 3 ){
-                    this.threeOthers.push(handRev[c]);
+                    this.threeOthers.push(handRev[c].number);
                 }
             }
         }
@@ -136,24 +136,66 @@ class PlayerHand{
             }
         }
         //check trips
+        for (let c in countDict){
+            if (countDict[c] == 3){
+                if (Number(c) > this.tripsRank){
+                    this.tripsRank = c;
+                    this.rank = Rank.trips;
+                }
+            }
+        }
+        if(this.rank == Rank.trips){
+            for(let c in handRev){
+                if(handRev[c].number != this.tripsRank && this.twoKickers.length < 2 ){
+                    this.twoKickers.push(handRev[c].number);
+                }
+            }
+        }
+        //check straight
+        //first, make unique hand
+        //Bug: May not recognize a straight flush if there are 2 cards of one of the numbers in the straight, because handUnique only stores 1 of the suits.
+        let handUnique = []
+        for (let c in this.hand){
+            if (!handUnique.some(Card=>Card.number == this.hand[c].number)){
+                handUnique.push(this.hand[c]);
+            }
+        }
+        //check straight (and straight flush)
+        let straightFlush = false
+        if(handUnique.length >= 5){
+            for(let i = 0; i <= handUnique.length - 5; i++){
+                if((handUnique[i+1].number == handUnique[i].number + 1) && (handUnique[i+2].number == handUnique[i].number + 2) && (handUnique[i+3].number == handUnique[i].number + 3) && (handUnique[i+4].number == handUnique[i].number + 4)){
+                    this.rank = Rank.straight;
+                    this.straightHigh = handUnique[i+4].number;
+                    //check for straight flush
+                    if(handUnique[i].suit == handUnique[i+1].suit && handUnique[i].suit == handUnique[i+2].suit && handUnique[i].suit == handUnique[i+3].suit && handUnique[i].suit == handUnique[i+4].suit){
+                        straightFlush = true;
+                        this.straightFlushHigh = handUnique[i+4].number;
+                    }
+                }
+            }
+        }
+        //check flush
+        
+        
     }
 }
 
 
 let playerHand = new PlayerHand()
-playerHand.addCard(new Card(8,Suit.club))
+playerHand.addCard(new Card(8,Suit.diamond))
 playerHand.addCard(new Card(5,Suit.diamond))
 playerHand.addCard(new Card(6,Suit.diamond))
-playerHand.addCard(new Card(6,Suit.diamond))
-playerHand.addCard(new Card(10,Suit.diamond))
-playerHand.addCard(new Card(10,Suit.diamond))
 playerHand.addCard(new Card(3,Suit.diamond))
+//playerHand.addCard(new Card(10,Suit.diamond))
+//playerHand.addCard(new Card(10,Suit.club))
+playerHand.addCard(new Card(4,Suit.diamond))
+playerHand.addCard(new Card(7,Suit.diamond))
+//playerHand.addCard(new Card(11,Suit.diamond))
+playerHand.addCard(new Card(6,Suit.diamond))
 playerHand.getRank()
 console.log(playerHand.rank)
-console.log(playerHand.firstPairRank)
-console.log(playerHand.threeOthers)
-console.log(playerHand.secondPairRank)
-console.log(playerHand.twoPairKicker)
+console.log(playerHand.straightHigh)
 
 
 
