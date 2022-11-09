@@ -23,6 +23,29 @@ function compareCard(first,second){
     }
 }
 
+class Deck{
+    constructor(){
+        this.cardDeck = [];
+        for(let i = 1; i <= 14; i++ ){
+            for (let s in Suit){
+                this.cardDeck.push(new Card(i,s))
+            }
+        }
+    }
+    shuffle(){
+        this.cardDeck.sort((a, b) => 0.5 - Math.random());
+    }
+    popTop(){
+        return this.cardDeck.pop();
+    }
+}
+
+let deck = new Deck();
+deck.shuffle();
+console.log(deck.cardDeck);
+console.log(deck.popTop())
+console.log(deck.cardDeck);
+
 
 
 
