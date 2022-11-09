@@ -120,13 +120,29 @@ class PlayerHand{
             }
         }
         //check two pair
+        for (let c in countDict){
+            if (countDict[c] == 2){
+                if (Number(c) > this.secondPairRank && Number(c) != this.firstPairRank){
+                    this.secondPairRank = c;
+                    this.rank = Rank.twoPair;
+                }
+            }
+        }
+        if(this.rank == Rank.twoPair){
+            for(let c in handRev){
+                if(handRev[c].number != this.firstPairRank && handRev[c].number != this.secondPairRank && this.twoPairKicker == 0 ){
+                    this.twoPairKicker = handRev[c].number;
+                }
+            }
+        }
+        //check trips
     }
 }
 
 
 let playerHand = new PlayerHand()
 playerHand.addCard(new Card(8,Suit.club))
-playerHand.addCard(new Card(13,Suit.diamond))
+playerHand.addCard(new Card(5,Suit.diamond))
 playerHand.addCard(new Card(6,Suit.diamond))
 playerHand.addCard(new Card(6,Suit.diamond))
 playerHand.addCard(new Card(10,Suit.diamond))
@@ -136,7 +152,8 @@ playerHand.getRank()
 console.log(playerHand.rank)
 console.log(playerHand.firstPairRank)
 console.log(playerHand.threeOthers)
-
+console.log(playerHand.secondPairRank)
+console.log(playerHand.twoPairKicker)
 
 
 
