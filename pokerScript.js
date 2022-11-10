@@ -176,26 +176,97 @@ class PlayerHand{
             }
         }
         //check flush
-        
-        
+        let spades = 0, clubs = 0, hearts = 0, diamonds = 0;
+        let flushSuit;
+        let flushBool = false
+        for (let c in this.hand){
+            switch(this.hand[c].suit){
+                    case Suit.spade:
+                        spades ++;
+                        if (spades >= 5){
+                            flushBool = true;
+                            flushSuit = Suit.spade;
+                        }
+                        break;
+                    case Suit.diamond:
+                        diamonds ++;
+                        if (diamonds >= 5){
+                            flushBool = true;
+                            flushSuit = Suit.diamond;
+                        }
+                        break;
+                    case Suit.club:
+                        clubs ++;
+                        if (clubs >= 5){
+                            flushBool = true;
+                            flushSuit = Suit.club;
+                        }
+                        break;
+                    case Suit.heart:
+                        hearts ++;
+                        if (hearts >= 5){
+                            flushBool = true;
+                            flushSuit = Suit.heart;
+                        }
+                        break;
+            }
+        }
+        if (flushBool){
+            this.rank = Rank.flush;
+            for (let c in handRev){
+                if (handRev[c].suit == flushSuit && this.flushVals.length < 5){
+                    this.flushVals.push(handRev[c].number);
+                }
+            }
+        }
+        //check full house
+        if (this.tripsRank > 0){
+            for (let c in countDict){
+                if (countDict[c] >= 2){
+                    if (Number(c) > this.twoSet && Number(c) != this.tripsRank){
+                        this.twoSet = c;
+                        this.rank = Rank.fullHouse;
+                    }
+                }
+            }
+        }
+        //check quads
+        for (let c in countDict){
+            if (countDict[c] == 4){
+                this.rank = Rank.quads;
+                for (let c in handRev){
+                    if (handRev[c].number != this.quadsRank && this.quadsKicker == 0){
+                        this.quadsKicker = handRev[c].number;
+                    }
+                }
+            }
+        }
+        //check straight flush
+        if (straightFlush){
+            this.rank = Rank.straightFlush;
+        }
     }
+}
+//compare 2 playerhands
+//returns 1 if first is better, 2 if second is better, 0 if tie
+function comparehands(first, second){
+    
 }
 
 
 let playerHand = new PlayerHand()
 playerHand.addCard(new Card(8,Suit.diamond))
-playerHand.addCard(new Card(5,Suit.diamond))
-playerHand.addCard(new Card(6,Suit.diamond))
+playerHand.addCard(new Card(3,Suit.club))
+playerHand.addCard(new Card(5,Suit.heart))
+playerHand.addCard(new Card(3,Suit.spade))
+playerHand.addCard(new Card(10,Suit.diamond))
+playerHand.addCard(new Card(3,Suit.club))
 playerHand.addCard(new Card(3,Suit.diamond))
-//playerHand.addCard(new Card(10,Suit.diamond))
-//playerHand.addCard(new Card(10,Suit.club))
-playerHand.addCard(new Card(4,Suit.diamond))
 playerHand.addCard(new Card(7,Suit.diamond))
 //playerHand.addCard(new Card(11,Suit.diamond))
 playerHand.addCard(new Card(6,Suit.diamond))
 playerHand.getRank()
 console.log(playerHand.rank)
-console.log(playerHand.straightHigh)
 
 
 
