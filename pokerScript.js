@@ -250,8 +250,18 @@ class PlayerHand{
 //compare 2 playerHands
 //returns 1 if first is better, 2 if second is better, 0 if tie
 //first = first playerHand, second = second playerHand
+//INCOMPLETE: needs to check cases where rank is equal
+//FOR NOW: determine winner with maximum playerHand.rank
 function compareHands(first, second){
-    
+    if (first.rank > second.rank){
+        return 1;
+    } else if (first.rank < second.rank){
+        return 2;
+    } else if (first.rank == second.rank){
+        //INCOMPLETE
+        return 0;
+        }
+    }
 }
 
 
