@@ -247,9 +247,10 @@ class PlayerHand{
         }
     }
 }
-//compare 2 playerhands
+//compare 2 playerHands
 //returns 1 if first is better, 2 if second is better, 0 if tie
-function comparehands(first, second){
+//first = first playerHand, second = second playerHand
+function compareHands(first, second){
     
 }
 
