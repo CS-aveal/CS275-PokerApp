@@ -290,7 +290,8 @@ const DealerAction = {
 }
 const Options = {
     allOptions: 0,
-    noCheck: 2
+    noCheck: 2,
+    noCall: 3,
     //allInNoOptions removed: determineAction should test for a player being all in and skip them
 }
 const Choice = {
@@ -305,7 +306,7 @@ class Player{
         this.name = name;
         this.stack = stack;
         this.privateHand = [];
-        this.hand = [];
+        this.hand = new PlayerHand();
         this.inRound = true; //may not need
         this.currentBet; // most likely will not need
         this.totalBet = 0;
@@ -344,7 +345,7 @@ class Round{
     }
     resetRound(){
         this.state = State.preflop;
-        this.playersIn = allPlayers;
+        this.playersIn = this.allPlayers;
         this.potSize = 0;
         this.highestBet = 0;
         this.dealerIndex += 1;
@@ -357,7 +358,7 @@ class Round{
 
 //r = round
 //act = required action (DealerAction enum)
-function doDealerAction(r, act){
+async function doDealerAction(r, act){
     console.log("dealer action: %s", act)
     switch(act){
             case DealerAction.dealPlayers:
@@ -391,10 +392,29 @@ function doDealerAction(r, act){
             break;
             case DealerAction.endRound:
             console.log("Round Over");
-            //implement
-            break;
-            case DealerAction.resetRound:
-            //wait 5 - 10 seconds for players to see revealed cards
+            let winningRank = 0;
+            let winnerIndex = 0;
+            //create PlayerHand and get rank
+            for(i in r.playersIn){
+                for(c in r.playersIn[i].privateHand){
+                    r.playersIn[i].hand.addCard(r.playersIn[i].privateHand[c]);
+                }
+                for(c in r.commonCards){
+                    r.playersIn[i].hand.addCard(r.commonCards[c]);
+                }
+                r.playersIn[i].hand.getRank();
+                console.log("%s has rank %s", r.playersIn[i].name, r.playersIn[i].hand.rank)
+                if (r.playersIn[i].hand.rank > winningRank){
+                    winningRank = r.playersIn[i].hand.rank;
+                    winnerIndex = i;
+                }
+            }
+            console.log("Winner is %s", r.playersIn[winnerIndex].name);
+            console.log("paying winner %s", r.potSize)
+            r.playersIn[winnerIndex].stack += r.potSize;
+            //wait
+            await new Promise(r => setTimeout(r, 5000));
+            console.log("resetting round")
             r.resetRound();
             break;
     }
@@ -434,10 +454,13 @@ function getPlayerInput(r, inputChoices, playerIndex){
                     pick = Choice.raise;
                     break;
             }
-            determineAction(r, pick, playerIndex, input2);
+            determineAction(r, pick, playerIndex, Number(input2));
             break;
             case Options.noCheck:
             //request for input with all options except check available
+            break;
+            case Options.noCall:
+            //implement
             break;
     }
 }
@@ -467,9 +490,10 @@ async function determineAction(r, prevAct, player, val){
             //do nothing?
         }else if(prevAct == Choice.call){
             console.log("%s called", r.playersIn[player].name);
-            r.playersIn[player].stack -= val;
-            r.playersIn[player].totalBet += val;
-            r.potSize += val;
+            let callAmt = r.highestBet - r.playersIn[player].totalBet
+            r.playersIn[player].totalBet += callAmt;
+            r.playersIn[player].stack -= callAmt;
+            r.potSize += callAmt;
         }else if(prevAct == Choice.raise){
             console.log("%s raised by %s", r.playersIn[player].name, val);
             r.playersIn[player].stack -= val;
@@ -563,3 +587,4 @@ round1.addPlayer(austin)
 round1.addPlayer(drew)
 //call startGame on round
 startGame(round1);
+
