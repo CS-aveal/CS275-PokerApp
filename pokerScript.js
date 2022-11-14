@@ -1,3 +1,5 @@
+const prompt = require('prompt-sync')()
+
 const Suit = {
     spade: 0,
     club: 1,
@@ -36,6 +38,14 @@ function compareCard(first,second){
 
 class Deck{
     constructor(){
+        this.cardDeck = [];
+        for(let i = 1; i <= 14; i++ ){
+            for (let s in Suit){
+                this.cardDeck.push(new Card(i,s))
+            }
+        }
+    }
+    resetDeck(){
         this.cardDeck = [];
         for(let i = 1; i <= 14; i++ ){
             for (let s in Suit){
@@ -260,24 +270,296 @@ function compareHands(first, second){
     } else if (first.rank == second.rank){
         //INCOMPLETE
         return 0;
+    }
+}
+
+const State = {
+    preflop: 0,
+    flop: 1,
+    turn: 2,
+    river: 3,
+    over: 4
+}
+const DealerAction = {
+    dealPlayers: 0,
+    dealFlop: 1,
+    dealTurn: 2,
+    dealRiver: 3,
+    endRound: 4,
+    resetRound: 5
+}
+const Options = {
+    allOptions: 0,
+    noCheck: 2
+    //allInNoOptions removed: determineAction should test for a player being all in and skip them
+}
+const Choice = {
+    fold: 0,
+    check: 1,
+    call: 2,
+    raise: 3
+}
+
+class Player{
+    constructor(name,stack){
+        this.name = name;
+        this.stack = stack;
+        this.privateHand = [];
+        this.hand = [];
+        this.inRound = true; //may not need
+        this.currentBet; // most likely will not need
+        this.totalBet = 0;
+        this.turn;
+        this.dealer = false;
+        this.options;
+        this.choice;
+    }
+    dealPrivateHand(deck){
+        this.privateHand = [];
+        this.privateHand.push(deck.popTop());
+        this.privateHand.push(deck.popTop());
+    }
+    setDealer(){
+        this.dealer = true;
+    }
+}
+
+class Round{
+    constructor(){
+        this.state
+        this.deck = new Deck();
+        this.deck.shuffle();
+        this.allPlayers = [];
+        this.playersIn = [];
+        this.commonCards = [];
+        this.potSize = 0;
+        this.highestBet = 0;
+        this.currentPlayerIndex;
+        this.dealerIndex = 0;
+        this.dealerPlayed = false;
+    }
+    addPlayer(player){
+        this.allPlayers.push(player);
+        this.playersIn.push(player);
+    }
+    resetRound(){
+        this.state = State.preflop;
+        this.playersIn = allPlayers;
+        this.potSize = 0;
+        this.highestBet = 0;
+        this.dealerIndex += 1;
+        this.dealerPlayed = false;
+        this.deck = new Deck();
+        this.commonCards = [];
+        this.currentPlayerIndex = this.dealerIndex + 1;
+    }
+}
+
+//r = round
+//act = required action (DealerAction enum)
+function doDealerAction(r, act){
+    console.log("dealer action: %s", act)
+    switch(act){
+            case DealerAction.dealPlayers:
+            r.deck.shuffle;
+            r.playersIn = r.allPlayers;
+            for(let c in r.playersIn){
+                console.log("dealing hand for %s", r.playersIn[c].name);
+                r.playersIn[c].dealPrivateHand(r.deck);
+                console.log(r.playersIn[c].privateHand);
+            }
+            break;
+            case DealerAction.dealFlop:
+            console.log("Dealing flop")
+            r.commonCards.push(r.deck.popTop());
+            r.commonCards.push(r.deck.popTop());
+            r.commonCards.push(r.deck.popTop());
+            console.log("Common cards: ")
+            console.log(r.commonCards);
+            break;
+            case DealerAction.dealTurn:
+            console.log("Dealing turn")
+            r.commonCards.push(r.deck.popTop());
+            console.log("Common cards: ")
+            console.log(r.commonCards);
+            break;
+            case DealerAction.dealRiver:
+            console.log("Dealing river")
+            r.commonCards.push(r.deck.popTop());
+            console.log("Common cards: ")
+            console.log(r.commonCards);
+            break;
+            case DealerAction.endRound:
+            console.log("Round Over");
+            //implement
+            break;
+            case DealerAction.resetRound:
+            //wait 5 - 10 seconds for players to see revealed cards
+            r.resetRound();
+            break;
+    }
+    //call determineAction, passing as an argument the action that just happened
+    console.log("calling determineAction");
+    determineAction(r, act, -1, 0);
+}
+
+//inputChoices = Choices enum
+//this function will be called by determineAction function. It will cue the appropriate handler depending on what choices are available, which will send the input request to the player
+//The input that is recieved will not come back to this function. When it is recieved, determine action will be called with the recieved input as an argument.
+//Because input doesn't come back to here, determineAction or doDealerAction will need to handle the events associated with playerInput choices, like removing a player when they fold, or updating pot and stack values when a bet is made.
+
+//everything done needs to be outputted to the UI via a handler, so we'll need a handler for everything like removing the player after they fold, dealing cards,changing pots, and any other changes that need to be observed in the UI. For now, all those actions are done directly, but we'll need to add calls to the handlers so that the UI gets updated too.
+
+function getPlayerInput(r, inputChoices, playerIndex){
+    switch(inputChoices){
+            case Options.allOptions:
+            let input2 = 0;
+            console.log("Input for player with index %i: %s", playerIndex, r.playersIn[playerIndex].name);
+            let input1 = prompt("enter action: ");
+            if (input1 == "raise"){
+                input2 = prompt("enter raise amount: ");
+            }
+            let pick;
+            switch(input1){
+                    case "fold":
+                    pick = Choice.fold;
+                    break;
+                    case "check":
+                    pick = Choice.check;
+                    break;
+                    case "call":
+                    pick = Choice.call;
+                    break;
+                    case "raise":
+                    pick = Choice.raise;
+                    break;
+            }
+            determineAction(r, pick, playerIndex, input2);
+            break;
+            case Options.noCheck:
+            //request for input with all options except check available
+            break;
+    }
+}
+
+//helper function
+function getNextIndex(arr, i){
+    if(i >= arr.length -1){
+        return 0;
+    } else{
+        return i + 1
+    }
+}
+
+//r = round
+//prevAct = Choice enum or dealerAction enum. Tells what action just occured.
+//player = player index of player that just acted. -1 if dealer.
+//val = bet/call value associated with player action.
+async function determineAction(r, prevAct, player, val){
+    if(player >= 0){ //the last action was a player action
+        //First, make update according to action taken
+        if(prevAct == Choice.fold){
+            console.log("%s folded", r.playersIn[player].name);
+            //remove player from playersIn
+            r.playersIn.splice(player,1);
+        } else if(prevAct == Choice.check){
+            console.log("%s checked", r.playersIn[player].name);
+            //do nothing?
+        }else if(prevAct == Choice.call){
+            console.log("%s called", r.playersIn[player].name);
+            r.playersIn[player].stack -= val;
+            r.playersIn[player].totalBet += val;
+            r.potSize += val;
+        }else if(prevAct == Choice.raise){
+            console.log("%s raised by %s", r.playersIn[player].name, val);
+            r.playersIn[player].stack -= val;
+            r.playersIn[player].totalBet += val;
+            r.highestBet += val; //make sure val = raise amount, not total bet for this to be right
+            r.potSize += val;
+        }
+        if(r.playersIn[player].dealer == true){
+            r.dealerPlayed = true;
+        }
+        console.log("potsize: %s", r.potSize)
+        //Next, determine next action
+        if(r.playersIn.length == 1){ //if only 1 player left
+            //round over via fold
+            //pay winner
+            r.playersIn[0].stack += r.potSize;
+            //wait 5 seconds
+            await new Promise(r => setTimeout(r, 5000));
+            //reset round
+            r.resetRound();
+        } else if (r.dealerPlayed && r.playersIn.every(player => player.totalBet == r.highestBet)){
+            //if dealer has played and each player has called highest bet
+            //end betting round, proceed to deal next card or complete round
+            r.dealerPlayed = false;
+            let act;
+            switch(r.state){
+                    case State.preflop:
+                    r.state = State.flop;
+                    act = DealerAction.dealFlop;
+                    break;
+                    case State.flop:
+                    r.state = State.turn;
+                    act = DealerAction.dealTurn;
+                    break;
+                    case State.turn:
+                    r.state = State.river;
+                    act = DealerAction.dealRiver;
+                    break;
+                    case State.river:
+                    r.state = State.over;
+                    act = DealerAction.endRound;
+                    break;
+            }
+            console.log("Calling doDealerAction");
+            doDealerAction(r, act);
+            
+        } else{
+            //continue betting round
+            if(prevAct == Choice.fold){
+                if(r.currentPlayerIndex == r.playersIn.length){
+                    r.currentPlayerIndex = 0;
+                } //else, don't update index because removing player that folded does so automatically
+            } else{
+                r.currentPlayerIndex = getNextIndex(r.playersIn,r.currentPlayerIndex)
+            }
+            //set input options for next player that getPlayerInput will recieve. THIS NEEDS TO HAPPEN AFTER DEALER ACTION PROCESSING, TOO
+            getPlayerInput(r, Options.allOptions, r.currentPlayerIndex);
+        }
+    }
+    else if(player == -1){//dealer action just happened
+        if(prevAct == DealerAction.dealPlayers || prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
+            //time for another betting round.
+            r.currentPlayerIndex = getNextIndex(r.playersIn, r.dealerIndex);
+            //call input function with players options
+            getPlayerInput(r, Options.allOptions, r.currentPlayerIndex);
         }
     }
 }
 
 
-let playerHand = new PlayerHand()
-playerHand.addCard(new Card(8,Suit.diamond))
-playerHand.addCard(new Card(3,Suit.club))
-playerHand.addCard(new Card(5,Suit.heart))
-playerHand.addCard(new Card(3,Suit.spade))
-playerHand.addCard(new Card(10,Suit.diamond))
-playerHand.addCard(new Card(3,Suit.club))
-playerHand.addCard(new Card(3,Suit.diamond))
-playerHand.addCard(new Card(7,Suit.diamond))
-//playerHand.addCard(new Card(11,Suit.diamond))
-playerHand.addCard(new Card(6,Suit.diamond))
-playerHand.getRank()
-console.log(playerHand.rank)
 
 
-
+function startGame(r){
+    console.log("Starting Game")
+    r.state = State.preflop;
+    r.playersIn[0].setDealer();
+    doDealerAction(r, DealerAction.dealPlayers)
+}
+//To start
+//create each player
+let heshi = new Player("Heshi", 100)
+let matt = new Player("Matt", 100)
+let austin = new Player("Austin", 100)
+let drew = new Player("Drew", 100)
+//create round instance
+let round1 = new Round();
+//add each player to round
+round1.addPlayer(heshi)
+round1.addPlayer(matt)
+round1.addPlayer(austin)
+round1.addPlayer(drew)
+//call startGame on round
+startGame(round1);
