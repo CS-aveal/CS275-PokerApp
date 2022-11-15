@@ -402,9 +402,8 @@ const DealerAction = {
     resetRound: 5
 }
 const Options = {
-    allOptions: 0,
-    noCheck: 2,
-    noCall: 3,
+    noCheck: 0,
+    noCall: 1,
     //allInNoOptions?
 }
 const Choice = {
@@ -560,37 +559,35 @@ async function doDealerAction(r, act){
 
 function getPlayerInput(r, inputChoices, playerIndex){
     switch(inputChoices){
-            case Options.allOptions:
-            let input2 = 0;
-            console.log("Input for player with index %i: %s", playerIndex, r.playersIn[playerIndex].name);
-            let input1 = prompt("enter action: ");
-            if (input1 == "raise"){
-                input2 = prompt("enter raise amount: ");
-            }
-            let pick;
-            switch(input1){
-                    case "fold":
-                    pick = Choice.fold;
-                    break;
-                    case "check":
-                    pick = Choice.check;
-                    break;
-                    case "call":
-                    pick = Choice.call;
-                    break;
-                    case "raise":
-                    pick = Choice.raise;
-                    break;
-            }
-            determineAction(r, pick, playerIndex, Number(input2));
-            break;
             case Options.noCheck:
-            //request for input with all options except check available
+            console.log("player cannot check")
             break;
             case Options.noCall:
-            //implement
+            console.log("player cannot call")
             break;
     }
+    let input2 = 0;
+    console.log("Input for player with index %i: %s", playerIndex, r.playersIn[playerIndex].name);
+    let input1 = prompt("enter action: ");
+    if (input1 == "raise"){
+        input2 = prompt("enter raise amount: ");
+    }
+    let pick;
+    switch(input1){
+            case "fold":
+            pick = Choice.fold;
+            break;
+            case "check":
+            pick = Choice.check;
+            break;
+            case "call":
+            pick = Choice.call;
+            break;
+            case "raise":
+            pick = Choice.raise;
+            break;
+    }
+    determineAction(r, pick, playerIndex, Number(input2));
 }
 
 //helper function
@@ -679,8 +676,14 @@ async function determineAction(r, prevAct, player, val){
             } else{
                 r.currentPlayerIndex = getNextIndex(r.playersIn,r.currentPlayerIndex)
             }
-            //set input options for next player that getPlayerInput will recieve. THIS NEEDS TO HAPPEN AFTER DEALER ACTION PROCESSING, TOO
-            getPlayerInput(r, Options.allOptions, r.currentPlayerIndex);
+            //set options
+            let opt;
+            if(r.playersIn[r.currentPlayerIndex].totalBet == r.highestBet){
+                opt = Options.noCall;
+            } else if(r.playersIn[r.currentPlayerIndex].totalBet < r.highestBet){
+                opt = Options.noCheck;
+            }
+            getPlayerInput(r, opt, r.currentPlayerIndex);
         }
     }
     else if(player == -1){//dealer action just happened
@@ -688,7 +691,7 @@ async function determineAction(r, prevAct, player, val){
             //time for another betting round.
             r.currentPlayerIndex = getNextIndex(r.playersIn, r.dealerIndex);
             //call input function with players options
-            getPlayerInput(r, Options.allOptions, r.currentPlayerIndex);
+            getPlayerInput(r, Options.noCall, r.currentPlayerIndex);
         }
         else if(prevAct == DealerAction.endRound){
             console.log("Starting another round")
