@@ -455,12 +455,12 @@ class Round{
         this.playersIn = this.allPlayers;
         this.potSize = 0;
         this.highestBet = 0;
-        this.dealerIndex += 1;
         this.dealerPlayed = false;
         this.deck = new Deck();
         this.deck.shuffle();
         this.commonCards = [];
-        this.currentPlayerIndex = getNextIndex(this.playersIn, this.currentPlayerIndex);
+        this.dealerIndex = getNextIndex(this.playersIn, this.dealerIndex);
+        this.currentPlayerIndex = getNextIndex(this.playersIn, this.dealerIndex);
         for(i in this.playersIn){
             this.playersIn[i].totalBet = 0;
             this.playersIn[i].dealer = false;
@@ -623,7 +623,7 @@ async function determineAction(r, prevAct, player, val){
             r.playersIn[player].totalBet += r.highestBet;
             r.potSize += r.highestBet;
         }
-        if(r.playersIn[player].dealer == true){
+        if(player == r.dealerIndex){
             r.dealerPlayed = true;
             console.log("Dealer (%s) played", r.playersIn[player].name)
         }
