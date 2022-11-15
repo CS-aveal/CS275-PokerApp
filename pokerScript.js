@@ -39,7 +39,7 @@ function compareCard(first,second){
 class Deck{
     constructor(){
         this.cardDeck = [];
-        for(let i = 1; i <= 14; i++ ){
+        for(let i = 2; i <= 14; i++ ){
             for (let s in Suit){
                 this.cardDeck.push(new Card(i,s))
             }
@@ -47,7 +47,7 @@ class Deck{
     }
     resetDeck(){
         this.cardDeck = [];
-        for(let i = 1; i <= 14; i++ ){
+        for(let i = 2; i <= 14; i++ ){
             for (let s in Suit){
                 this.cardDeck.push(new Card(i,s))
             }
@@ -92,6 +92,23 @@ class PlayerHand{
     }
     addCard(card){
         this.hand.push(card);
+    }
+    clear(){
+        this.hand = [];
+        this.rank = Rank.highCard;
+        this.fiveHighest = []
+        this.firstPairRank = 0
+        this.threeOthers = []
+        this.secondPairRank = 0
+        this.twoPairKicker = 0
+        this.tripsRank = 0
+        this.twoKickers = []
+        this.straightHigh = 0
+        this.flushVals = []
+        this.twoSet = 0
+        this.quadsRank = 0
+        this.quadsKicker = 0
+        this.straightFlushHigh = 0
     }
     getRank(){
         //sort hand
@@ -388,7 +405,7 @@ const Options = {
     allOptions: 0,
     noCheck: 2,
     noCall: 3,
-    //allInNoOptions removed: determineAction should test for a player being all in and skip them
+    //allInNoOptions?
 }
 const Choice = {
     fold: 0,
@@ -447,12 +464,13 @@ class Round{
         this.deck = new Deck();
         this.deck.shuffle();
         this.commonCards = [];
-        this.currentPlayerIndex = this.dealerIndex + 1;
+        this.currentPlayerIndex = getNextIndex(this.playersIn, this.currentPlayerIndex);
         for(i in this.playersIn){
             this.playersIn[i].totalBet = 0;
-        }
-        for(i in this.playersIn){
             this.playersIn[i].dealer = false;
+            this.playersIn[i].privateHand = [];
+            this.playersIn[i].hand.clear();
+            
         }
         this.playersIn[this.dealerIndex].dealer = true;
     }
@@ -500,8 +518,9 @@ async function doDealerAction(r, act){
             break;
             case DealerAction.endRound:
             console.log("Round Over");
-            let winningRank = 0;
             let winnerIndex = 0;
+            let winningHand = new PlayerHand();
+            winningHand.rank = -1;
             //create PlayerHand and get rank
             for(i in r.playersIn){
                 for(c in r.playersIn[i].privateHand){
@@ -512,10 +531,11 @@ async function doDealerAction(r, act){
                 }
                 r.playersIn[i].hand.getRank();
                 console.log("%s has rank %s", r.playersIn[i].name, r.playersIn[i].hand.rank)
-                if (r.playersIn[i].hand.rank > winningRank){
-                    winningRank = r.playersIn[i].hand.rank;
+                if (compareHands(r.playersIn[i].hand,winningHand) == 1){
+                    winningHand = r.playersIn[i].hand;
                     winnerIndex = i;
                 }
+                
             }
             console.log("Winner is %s", r.playersIn[winnerIndex].name);
             console.log("paying winner %s", r.potSize)
