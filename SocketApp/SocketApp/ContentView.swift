@@ -18,13 +18,8 @@ class formattedData: Identifiable {
 }
 
 
-//homescreen will be true by default
-var homeScreen = true
-var firstRound = false
-var createGameScreen = false
-var joinGameScreen = false
-var gameScreen = false
-var playerTurn = false
+
+
 
 class GameInformation: ObservableObject {
     @Published var usersCards = []
@@ -46,6 +41,16 @@ final class Service: ObservableObject {
     @Published var gameDetails = [String: String]()
     @Published var userCards = [String: String]()
     @Published var cardsInMiddle = [String: String]()
+    //homescreen will be true by default
+
+    //These have to be published attributes so that they will change and update in real time
+    @Published var homeScreen = true
+    @Published var createGameScreen = false
+    @Published var joinGameScreen = false
+    @Published var gameScreen = false
+    @Published var playerTurn = false
+    @Published var firstRound = false
+    
     
     init() {
         let socket = manager.defaultSocket
@@ -125,12 +130,12 @@ final class Service: ObservableObject {
             //either display the user controls or just un grey them so they are able to be clicked
             //display the user controls
             //depending on what the user did send that information back to the server
-            playerTurn = true
+            self?.playerTurn = true
             if let data = data[0] as? [String: String],
                 let rawMessage = data["msg"]{
                 if (rawMessage == "Round 0"){
                     //ask for just the bet
-                    firstRound = true
+                    self?.firstRound = true
                 }
                 else{
                     //not the first round
@@ -148,6 +153,8 @@ final class Service: ObservableObject {
         
         socket.on("Start Game") { [weak self] (data, ack) in
             //will need to now display the Game Screen
+            //will set the game screen to be gameScreen
+            //will set t
             if let data = data[0] as? [String: String],
                 let rawMessage = data["msg"]{
                  DispatchQueue.main.async {
@@ -178,6 +185,12 @@ final class Service: ObservableObject {
         socket.emit("Send Data", turn)
     }
     
+    func startGame(turn: [String:String]){
+        let socket = manager.defaultSocket
+        socket.connect()
+        socket.emit("Start Game", turn)
+    }
+    
     func sendCreateGame(settings: [String:String]){
         //settings is a dictionary
         //this is so that I am able to pass all of the settings with the key word being the setting
@@ -192,110 +205,15 @@ final class Service: ObservableObject {
 struct ContentView: View {
     @ObservedObject var service = Service()
     var body: some View {
-        if (homeScreen){
-            //have a view for the homescreen
-            VStack {
-                /*
-                Button{
-                    //create game button
-                    //this will transfer to the create game screen
-                    //this will set the homescreen variable to false and createGamescreen to true
-                }
-                 */
-                
-                /*
-                Button{
-                    //join game button
-                    //this will transfer screens to the join game screen
-                    //will set homescreen variable to false and joingamescreen to true
-                }
-                 */
-                Button("Create Game"){
-                    homeScreen = false
-                    createGameScreen = true
-                }
-                Button("Join Game"){
-                    homeScreen = false
-                    joinGameScreen = true
-                }
-                
-                
-                
-                Spacer()
-            }
+        //not sure if these need to be while loops or not
+        VStack{
+            
+            //The screens and the changing will be handled by someone else
+            Text("HOME SCREEN")
+            
         }
-        else if (createGameScreen){
-            VStack {
-                //This will have the create game settings screen
-                //therefore will have pot size and such
-                //not sure if we want sliders or how we want this done
-                //to send data to the server I have to call a function
-                
-                
-                Spacer()
-            }
-        }
-        else if (gameScreen){
-            if (firstRound){
-                if (playerTurn){
-                    //show the gamescreen with buttons available for pushing
-                    VStack {
-                        var dic = [String: String]()
-                        //most likely will not be a button
-                        Button("Bet"){
-                            
-                            dic["Bet"] = "Bet amount"
-                            service.sendPlayerTurn(turn: dic)
-                            playerTurn = false
-                        }
-                    }
-                }
-                else{
-                    //should show the gamescreen but without greyed out buttons that do not work
-                    
-                }
-            }
-            else{
-                //round is not zero and should show all of the buttons
-                if (playerTurn){
-                    //should show all of the buttons available and able to be pushed
-                    VStack {
-                        var dic = [String: String]()
-                        Button("Fold"){
-                            //doesn't matter what the value of fold is
-                            dic["Fold"] = " "
-                            service.sendPlayerTurn(turn: dic)
-                            playerTurn = false
-                        }
-                        //most likely will not be a button
-                        Button("Bet"){
-                            
-                            dic["Bet"] = "Bet amount"
-                            service.sendPlayerTurn(turn: dic)
-                            playerTurn = false
-                        }
-                    }
-                }
-                else{
-                    //should show the available buttons but greyed out and should not be able to press the buttons
-                    VStack {
-                        var dic = [String: String]()
-                        /*
-                         Buttons here should be greyed out because it is not users turn and it is not round 0
-                         
-                        Button("Fold"){
-                            //doesn't matter what the value of fold is
-                            //
-                        }
-                        //most likely will not be a button
-                        Button("Bet"){
-                            
-                        }
-                         */
-                    }
-                }
-            }
-        }
+        
+        
     }
 }
 

@@ -9,20 +9,13 @@ connections = [];
  might want to create the object variable with
  */
 
-function GameIteration(id, code, users, gameRunning) {
-  this.id = id;
-  this.code = code;
-  //userList is going to be a list of items of struct player so it should probably be called playerList
-  //initialize
-  this.userList = [];
-  //debatably default to just the first player/user
-  this.userTurn = users[0];
-  this.round = 0;
-  this.gameRunning = gameRunning;
-}
-
 class GameIteration{
-    
+    id;
+    code;
+    users;
+    round;
+    gameRunning;
+    potSize;
     constructor(id, code, users, gameRunning){
         //users is going to be an array of class players
         this.id = id;
@@ -36,12 +29,15 @@ class GameIteration{
     incrementRound(){
         this.round = this.round + 1;
     }
+    
     get playerTurn(){
         return this.userTurn;
     }
+    
     get iD{
         return this.id;
     }
+    
     get code{
         return this.code;
     }
@@ -60,6 +56,9 @@ class GameIteration{
         else{
             return 0;
         }
+    }
+    specifyPotSize(potSize){
+        this.potSize = potSize;
     }
 }
 
@@ -172,6 +171,39 @@ io.sockets.on('connection', function(socket) {
         io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
     });
     
+    socket.on('Created Game', function(data) {
+        
+        //onlything needed in start game is the call to the function start game
+        
+        startGame(data);
+        for (let i = 0; i < data.length; i++){
+            
+        }
+        
+        /* this data needs to be inside the start game method*/
+        //Determine who goes first by just letting the host go first
+        //data is going to be the game code
+        //just did less than because it is zero indexed
+        
+        for (let i = 0; i < gameList.length; i++){
+            if (gameList[i].code == data){
+                //Start the game functions
+                gameRunning = true
+                gameList[i].userTurn = gameList[i].users[0]
+                while (gameRunning){
+                    
+                    //emit to the socket that needs to play its turn
+                    playerTurn(gameList[i].userTurn)
+                }
+            }
+            else{
+                //game code was not in the list of games
+            }
+        }
+        
+        io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
+    });
+    
     socket.on('Player Turn Done', function(data) {
         //this will now need to log the players turn and say it is the next persons turn
         //do this by
@@ -190,6 +222,15 @@ io.sockets.on('connection', function(socket) {
             
         }
         io.sockets.emit('iOS Client Port', {msg: 'Hi iOS Client!'}, {msg1: ['Hello', 'World']});
+    });
+    
+    socket.on('Start Game', function(data) {
+        //this will now need to log the players turn and say it is the next persons turn
+        //do this by
+        
+        //need to pass in the round which will be created once create game was called so instance is already created
+        
+        startGame(r);
     });
     
     socket.on('Join Game', function(data) {
@@ -231,6 +272,12 @@ io.sockets.on('connection', function(socket) {
     });
 });
 
+
+
+//Need to test whether this will work properly or not with the automatic updating or not if not then I will need a function to start the game
+//Event handler for sending the player's turn
+//Function to handle that moves turns
+//
 function startGame(gameCode){
     for (let i = 0; i < gameList.length; i ++){
         if (gameList[i].code == gameCode) {
@@ -259,4 +306,8 @@ function startGame(gameCode){
 
 function playerTurn(player) {
   return p1 * p2;
+}
+
+function getPlayerInput(socketID) {
+    io.to(socketID).emit("Player Turn", {msg: "Your turn"});
 }
