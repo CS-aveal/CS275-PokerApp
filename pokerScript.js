@@ -531,7 +531,6 @@ async function doDealerAction(r, act){
                     winningHand = r.playersIn[i].hand;
                     winnerIndex = i;
                 }
-                
             }
             console.log("Winner is %s", r.playersIn[winnerIndex].name);
             console.log("paying winner %s", r.potSize)
@@ -605,8 +604,6 @@ async function determineAction(r, prevAct, player, val){
         //First, make update according to action taken
         if(prevAct == Choice.fold){
             console.log("%s folded", r.playersIn[player].name);
-            //remove player from playersIn
-            r.playersIn.splice(player,1);
         } else if(prevAct == Choice.check){
             console.log("%s checked", r.playersIn[player].name);
             //do nothing?
@@ -627,8 +624,36 @@ async function determineAction(r, prevAct, player, val){
             r.dealerPlayed = true;
             console.log("Dealer (%s) played", r.playersIn[player].name)
         }
-        console.log("potsize: %s", r.potSize)
-        console.log("%s's stack size: %s",r.playersIn[player].name, r.playersIn[player].stack)
+        //UPDATE INDEXES
+        if(prevAct == Choice.fold){
+            let dealerFolded = false;
+            if(player == r.dealerIndex){
+                dealerFolded = true;
+            }
+            //remove player from playersIn
+            r.playersIn.splice(player,1);
+            if(dealerFolded){
+                if(player == 0){
+                    r.dealerIndex = r.playerIn.length - 1;
+                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
+                } else {
+                    r.dealerIndex -= 1;
+                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
+                }
+            } else{
+                if(player <= r.dealerIndex){
+                    r.dealerIndex -= 1;
+                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
+                } else{
+                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
+                }
+            }
+        } else{
+            r.currentPlayerIndex = getNextIndex(r.playersIn,r.currentPlayerIndex)
+            console.log("potsize: %s", r.potSize)
+            console.log("%s's stack size: %s",r.playersIn[player].name, r.playersIn[player].stack)
+        }
+        
         //Next, determine next action
         if(r.playersIn.length == 1){ //if only 1 player left
             //round over via fold
@@ -666,13 +691,7 @@ async function determineAction(r, prevAct, player, val){
             
         } else{
             //continue betting round
-            if(prevAct == Choice.fold){
-                if(r.currentPlayerIndex == r.playersIn.length){
-                    r.currentPlayerIndex = 0;
-                } //else, don't update index because removing player that folded does so automatically
-            } else{
-                r.currentPlayerIndex = getNextIndex(r.playersIn,r.currentPlayerIndex)
-            }
+            
             //set options
             let opt;
             if(r.playersIn[r.currentPlayerIndex].totalBet == r.highestBet){
