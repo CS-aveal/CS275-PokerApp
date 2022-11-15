@@ -268,10 +268,106 @@ function compareHands(first, second){
     } else if (first.rank < second.rank){
         return 2;
     } else if (first.rank == second.rank){
-        //INCOMPLETE
-        return 0;
+        let compare = 0;
+        switch(first.rank){
+                case Rank.highCard:
+                for(c in first.fiveHighest){
+                    compare = compareCard(first.fiveHighest[c],second.fiveHighest[c]);
+                    if(compare > 0){
+                        return compare;
+                    }
+                }
+                return 0;
+                case Rank.pair:
+                if(first.firstPairRank > second.firstPairRank){
+                    return 1;
+                } else if (second.firstPairRank > first.firstPairRank){
+                    return 2;
+                }
+                for(c in first.threeOthers){
+                    compare = compareCard(first.threeOthers[c],second.threeOthers[c]);
+                    if(compare > 0){
+                        return compare;
+                    }
+                }
+                return 0;
+                case Rank.twoPair:
+                if(first.firstPairRank > second.firstPairRank){
+                    return 1;
+                } else if (second.firstPairRank > first.firstPairRank){
+                    return 2;
+                } else if(first.secondPairRank > second.secondPairRank){
+                    return 1;
+                } else if (second.secondPairRank > first.secondPairRank){
+                    return 2;
+                } else {
+                    return compareCard(first.twoPairKicker, second.twoPairKicker);
+                }
+                case Rank.trips:
+                if(first.tripsRank > second.tripsRank){
+                    return 1;
+                } else if (second.tripsRank > first.tripsRank){
+                    return 2;
+                }
+                for(c in first.twoKickers){
+                    compare = compareCard(first.twoKickers[c],second.twoKickers[c]);
+                    if(compare > 0){
+                        return compare;
+                    }
+                }
+                return 0;
+                case Rank.straight:
+                if(first.straightHigh > second.straightHigh){
+                    return 1;
+                } else if(second.straightHigh > first.straightHigh){
+                    return 2;
+                } else{
+                    return 0;
+                }
+                case Rank.flush:
+                for(c in first.flushVals){
+                    compare = compareCard(first.flushVals[c],second.flushVals[c]);
+                    if(compare > 0){
+                        return compare;
+                    }
+                }
+                return 0;
+                case Rank.fullHouse:
+                if(first.tripsRank > second.tripsRank){
+                    return 1;
+                } else if (second.tripsRank > first.tripsRank){
+                    return 2;
+                }
+                if(first.twoSet > second.twoSet){
+                    return 1;
+                } else if (second.twoSet > first.twoSet){
+                    return 2;
+                }
+                return 0;
+                case Rank.quads:
+                if(first.quadsRank > second.quadsRank){
+                    return 1;
+                } else if (second.quadsRank > first.quadsRank){
+                    return 2;
+                }
+                if(first.quadsKicker > quadsKicker){
+                    return 1;
+                } else if (second.quadsKicker > first.quadsKicker){
+                    return 2;
+                }
+                return 0;
+                case Rank.straightFlush:
+                if(first.straightFlushHigh > second.straightFlushHigh){
+                    return 1;
+                } else if(second.straightFlushHigh > first.straightFlushHigh){
+                    return 2;
+                } else{
+                    return 0;
+                }
+        }
     }
 }
+
 
 const State = {
     preflop: 0,
