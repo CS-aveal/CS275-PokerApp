@@ -151,6 +151,24 @@ final class Service: ObservableObject {
             
         }
         
+        socket.on("Player Added") { [weak self] (data, ack) in
+            //either display the user controls or just un grey them so they are able to be clicked
+            //display the user controls
+            //depending on what the user did send that information back to the server
+            self?.playerTurn = true
+            if let data = data[0] as? [String: String],
+                let rawMessage = data["msg"]{
+                 DispatchQueue.main.async {
+                     self?.stringMessages.append(rawMessage)
+                 }
+             }
+            
+            
+            //just an example but you get the point
+            socket.emit("Player Turn Done", "Fold")
+            
+        }
+        
         socket.on("Start Game") { [weak self] (data, ack) in
             //will need to now display the Game Screen
             //will set the game screen to be gameScreen
@@ -182,13 +200,25 @@ final class Service: ObservableObject {
     func sendPlayerTurn(turn: [String:String]){
         let socket = manager.defaultSocket
         socket.connect()
-        socket.emit("Send Data", turn)
+        socket.emit("Player Turn Done", turn)
     }
     
     func startGame(turn: [String:String]){
         let socket = manager.defaultSocket
         socket.connect()
         socket.emit("Start Game", turn)
+    }
+    
+    func addPlayer(){
+        let socket = manager.defaultSocket
+        socket.connect()
+        socket.emit("Add Player", "Player Joined")
+    }
+    
+    func createRound(){
+        let socket = manager.defaultSocket
+        socket.connect()
+        socket.emit("Start Round", "Create Round")
     }
     
     func sendCreateGame(settings: [String:String]){
@@ -208,10 +238,20 @@ struct ContentView: View {
         //not sure if these need to be while loops or not
         VStack{
             
+            Button("Create Round"){
+                service.createRound()
+            }
             //The screens and the changing will be handled by someone else
             Text("HOME SCREEN")
             
+            Button("Add Player"){
+                service.addPlayer()
+            }
+            
+            
         }
+        //in game screen will be able to handle if player turn then either ungrey buttons or make buttons available
+        //once players input is done the button that they choose will call the function send player turn
         
         
     }
