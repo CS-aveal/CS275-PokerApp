@@ -420,10 +420,7 @@ class Player{
         this.privateHand = [];
         this.hand = new PlayerHand();
         this.totalBet = 0;
-        this.turn;
         this.dealer = false;
-        this.options;
-        this.choice;
     }
     dealPrivateHand(deck){
         this.privateHand = [];
