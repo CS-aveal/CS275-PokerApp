@@ -307,8 +307,6 @@ class Player{
         this.stack = stack;
         this.privateHand = [];
         this.hand = new PlayerHand();
-        this.inRound = true; //may not need
-        this.currentBet; // most likely will not need
         this.totalBet = 0;
         this.turn;
         this.dealer = false;
@@ -335,8 +333,8 @@ class Round{
         this.commonCards = [];
         this.potSize = 0;
         this.highestBet = 0;
-        this.currentPlayerIndex;
         this.dealerIndex = 0;
+        this.currentPlayerIndex = 1;
         this.dealerPlayed = false;
     }
     addPlayer(player){
@@ -351,21 +349,35 @@ class Round{
         this.dealerIndex += 1;
         this.dealerPlayed = false;
         this.deck = new Deck();
+        this.deck.shuffle();
         this.commonCards = [];
         this.currentPlayerIndex = this.dealerIndex + 1;
+        for(i in this.playersIn){
+            this.playersIn[i].totalBet = 0;
+        }
+        for(i in this.playersIn){
+            this.playersIn[i].dealer = false;
+        }
+        this.playersIn[this.dealerIndex].dealer = true;
     }
 }
 
 //r = round
 //act = required action (DealerAction enum)
 async function doDealerAction(r, act){
-    console.log("dealer action: %s", act)
+    r.highestBet = 0;
+    for(i in r.playersIn){
+        r.playersIn[i].totalBet = 0;
+    }
     switch(act){
             case DealerAction.dealPlayers:
             r.deck.shuffle;
             r.playersIn = r.allPlayers;
             for(let c in r.playersIn){
                 console.log("dealing hand for %s", r.playersIn[c].name);
+                if(r.playersIn[c].dealer == true){
+                    console.log("<Dealer>")
+                }
                 r.playersIn[c].dealPrivateHand(r.deck);
                 console.log(r.playersIn[c].privateHand);
             }
@@ -496,15 +508,17 @@ async function determineAction(r, prevAct, player, val){
             r.potSize += callAmt;
         }else if(prevAct == Choice.raise){
             console.log("%s raised by %s", r.playersIn[player].name, val);
-            r.playersIn[player].stack -= val;
-            r.playersIn[player].totalBet += val;
             r.highestBet += val; //make sure val = raise amount, not total bet for this to be right
-            r.potSize += val;
+            r.playersIn[player].stack -= r.highestBet;
+            r.playersIn[player].totalBet += r.highestBet;
+            r.potSize += r.highestBet;
         }
         if(r.playersIn[player].dealer == true){
             r.dealerPlayed = true;
+            console.log("Dealer (%s) played", r.playersIn[player].name)
         }
         console.log("potsize: %s", r.potSize)
+        console.log("%s's stack size: %s",r.playersIn[player].name, r.playersIn[player].stack)
         //Next, determine next action
         if(r.playersIn.length == 1){ //if only 1 player left
             //round over via fold
@@ -559,6 +573,10 @@ async function determineAction(r, prevAct, player, val){
             r.currentPlayerIndex = getNextIndex(r.playersIn, r.dealerIndex);
             //call input function with players options
             getPlayerInput(r, Options.allOptions, r.currentPlayerIndex);
+        }
+        else if(prevAct == DealerAction.endRound){
+            console.log("Starting another round")
+            doDealerAction(r, DealerAction.dealPlayers)
         }
     }
 }
