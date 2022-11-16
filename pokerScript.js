@@ -444,6 +444,7 @@ class Round{
         this.potSize = 0;
         this.highestBet = 0;
         this.dealerIndex = 0;
+        this.lastPlayerIndex = 0;
         this.currentPlayerIndex = 1;
         this.dealerPlayed = false;
     }
@@ -461,6 +462,7 @@ class Round{
         this.deck.shuffle();
         this.commonCards = [];
         this.dealerIndex = getNextIndex(this.allPlayers, this.dealerIndex);
+        this.lastPlayerIndex = this.dealerIndex;
         this.currentPlayerIndex = getNextIndex(this.allPlayers, this.dealerIndex);
         for(i in this.allPlayers){
             this.allPlayers[i].totalBet = 0;
@@ -536,8 +538,8 @@ async function doDealerAction(act){
             console.log("paying winner %s", r.potSize)
             r.playersIn[winnerIndex].stack += r.potSize;
             //wait
-            await new Promise(r => setTimeout(r, 5000));
-            console.log("resetting round")
+            //await new Promise(r => setTimeout(r, 5000));
+            console.log("resetting round");
             r.resetRound();
             break;
     }
@@ -601,12 +603,28 @@ function increment(arr,i){
         return i + 1
     }
 }
+function getPrevIndex(arr, i){
+    let ind = decrement(arr,i)
+    while(r.allPlayers[ind].folded == true){
+        ind = r.currentPlayerIndex = decrement(arr,ind)
+    }
+    return ind;
+}
+function decrement(arr,i){
+    if(i == 0){
+        return arr.length -1;
+    } else{
+        return i - 1
+    }
+}
+
+
 
 //r = round
 //prevAct = Choice enum or dealerAction enum. Tells what action just occured.
 //player = player index of player that just acted. -1 if dealer.
 //val = bet/call value associated with player action.
-async function determineAction(prevAct, player, val){
+function determineAction(prevAct, player, val){
     if(player >= 0){ //the last action was a player action
         //First, make update according to action taken
         if(prevAct == Choice.fold){
@@ -614,6 +632,7 @@ async function determineAction(prevAct, player, val){
             r.allPlayers[player].folded = true;
             let remInd = r.playersIn.indexOf(r.allPlayers[player]);
             r.playersIn.splice(remInd,1);
+            
         } else if(prevAct == Choice.check){
             console.log("%s checked", r.allPlayers[player].name);
             //do nothing?
@@ -630,9 +649,15 @@ async function determineAction(prevAct, player, val){
             r.allPlayers[player].totalBet += r.highestBet;
             r.potSize += r.highestBet;
         }
-        if(player == r.dealerIndex){
+        if(player == r.lastPlayerIndex){
             r.dealerPlayed = true;
-            console.log("Dealer (%s) played", r.allPlayers[player].name)
+            console.log("Last player %s played", r.allPlayers[player].name)
+        }
+        if(prevAct == Choice.fold){
+            if(player == r.lastPlayerIndex){
+                console.log("decremented last player index")
+                r.lastPlayerIndex = decrement(r.allPlayers, r.lastPlayerIndex);
+            }
         }
         
         console.log("potsize: %s", r.potSize)
