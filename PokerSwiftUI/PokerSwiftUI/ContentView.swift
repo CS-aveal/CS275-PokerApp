@@ -11,8 +11,8 @@ class DiffScreens: ObservableObject {
     
     @Published var home: Bool = false
     @Published var createGame: Bool = false
-    @Published var joinGame: Bool = true
-    @Published var inGame: Bool = false
+    @Published var joinGame: Bool = false
+    @Published var inGame: Bool = true
     
     
 }
@@ -89,7 +89,6 @@ struct createGameView: View {
                         Text($0)
                     }
                     .pickerStyle(.menu)
-                    
                     
                 }
                 
@@ -182,6 +181,18 @@ struct inGameView: View {
     
     @ObservedObject var screens: DiffScreens = DiffScreens()
     
+    var p1Name = "Player 1"
+    var p2Name = "Player 2"
+    var p3Name = "Player 3"
+    var p4Name = "Player 4"
+    
+    var p1Chips = 0.00
+    var p2Chips = 0.00
+    var p3Chips = 0.00
+    var p4Chips = 0.00
+    var potVal = 0.00
+    
+    
     var body: some View {
     
             ZStack{ // ZStack for background
@@ -199,7 +210,9 @@ struct inGameView: View {
                         Spacer()
                         
                         VStack { // Player 2
-                            Text("Player 2")
+                            Text("\(p2Name)")
+                                .bold()
+                            
                             
                             HStack{ // Two Cards
                                 Image("backOfCard")
@@ -207,20 +220,23 @@ struct inGameView: View {
                                 
                             }
                             
-                            Text("(Chip Count)")
+                            Text("$ \(p2Chips, specifier: "%.2f")")
+                                .bold()
                         }
                         
                         Spacer()
                         
                         VStack { // Player 3
-                            Text("Player 3")
+                            Text("\(p3Name)")
+                                .bold()
                             
                             HStack{ // Two Cards
                                 Image("backOfCard")
                                 Image("backOfCard")
                             }
                             
-                            Text("(Chip Count)")
+                            Text("$ \(p3Chips, specifier: "%.2f")")
+                                .bold()
                         }
                         
                         Spacer()
@@ -232,14 +248,16 @@ struct inGameView: View {
                     HStack { // Two Players and Pot Value
                         
                         VStack { // Player 1
-                            Text("Player 1")
+                            Text("\(p1Name)")
+                                .bold()
                             
                             HStack{ // Two Cards
                                 Image("backOfCard")
                                 Image("backOfCard")
                             }
                             
-                            Text("(Chip Count)")
+                            Text("$ \(p1Chips, specifier: "%.2f")")
+                                .bold()
                             
                         }
                         .padding(.leading, 55)
@@ -257,7 +275,7 @@ struct inGameView: View {
                                 Image("backOfCard")
                             }
                             
-                            Text("(POT VALUE)")
+                            Text("$ \(potVal, specifier: "%.2f")")
                                 .font(.system(size: 30, weight: .bold, design: .monospaced))
                             
                         }
@@ -269,14 +287,16 @@ struct inGameView: View {
                             
                             
                             
-                            Text("Player 4")
+                            Text("\(p4Name)")
+                                .bold()
                             
                             HStack{ // Two Cards
                                 Image("backOfCard")
                                 Image("backOfCard")
                             }
                             
-                            Text("(Chip Count)")
+                            Text("$ \(p4Chips, specifier: "%.2f")")
+                                .bold()
                             
                         }
                         .padding(.trailing, 55)
