@@ -12,17 +12,34 @@ class DiffScreens: ObservableObject {
     @Published var home: Bool!
     @Published var createGame: Bool!
     @Published var joinGame: Bool!
+    @Published var waiting: Bool!
     @Published var inGame: Bool!
+    @Published var isHost: Bool!
+    
     
     init() {
         
         self.home = true
         self.createGame = false
         self.joinGame = false
+        self.waiting = false
         self.inGame = false
+        self.isHost = false
         
     }
     
+    
+}
+
+class Observables: ObservableObject {
+    
+    @Published var host: Int!
+    
+    init() {
+        
+        self.host = 0
+        
+    }
     
 }
 
@@ -43,6 +60,9 @@ struct ContentView: View {
         }
         if screens.joinGame == true {
             joinGameView()
+        }
+        if screens.waiting == true {
+            waitingView()
         }
         
         
@@ -129,7 +149,8 @@ struct AppHome: View {
 
 struct createGameView: View {
     
-    @ObservedObject var screens: DiffScreens = DiffScreens()
+    @EnvironmentObject var screens: DiffScreens
+    @EnvironmentObject var vars: Observables
     
     @State private var name: String = ""
     @State private var stake: String = ""
@@ -184,6 +205,10 @@ struct createGameView: View {
                     
                     //submit
                     
+                    self.screens.isHost = true
+                    self.screens.createGame = false
+                    self.screens.waiting = true
+                    
                     
                 }, label: {
                     Text("SUBMIT")
@@ -203,7 +228,8 @@ struct createGameView: View {
 
 struct joinGameView: View {
     
-    @ObservedObject var screens: DiffScreens = DiffScreens()
+    @EnvironmentObject var screens: DiffScreens
+    @EnvironmentObject var vars: Observables
     
     @State private var joinName: String = ""
     @State private var joinCode: String = ""
@@ -244,6 +270,8 @@ struct joinGameView: View {
                     //submit
                     
                     
+                    self.screens.joinGame = false
+                    self.screens.waiting = true
                     
                     
                 }, label: {
@@ -263,9 +291,74 @@ struct joinGameView: View {
     
 }
 
+struct waitingView: View {
+    
+    @EnvironmentObject var screens: DiffScreens
+    @EnvironmentObject var vars: Observables
+    
+    var body: some View{
+        
+        ZStack {
+            
+            Color.green
+                .ignoresSafeArea()
+            
+            // If user is host
+            if self.screens.isHost {
+                
+                VStack{
+                    
+                    Text("Waiting for host to start the game...")
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    
+                    // Start game button
+                    Button(action: {
+                        
+                        //Start game action
+                        
+                        
+                        self.screens.waiting = false
+                        self.screens.inGame = true
+                        
+                        
+                    }, label: {
+                        Text("START GAME")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+
+                    })
+                    
+                    
+                    
+                    
+                }
+                
+                
+                
+            }
+            // If user is not host
+            if !self.screens.isHost {
+                
+                
+                VStack{
+                    
+                    Text("Waiting for host to start the game...")
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    
+                }
+                
+            }
+        
+            
+        }
+        
+    }
+    
+}
+
+
 struct inGameView: View {
     
-    @ObservedObject var screens: DiffScreens = DiffScreens()
+    @EnvironmentObject var screens: DiffScreens
     
     var p1Name = "Player 1"
     var p2Name = "Player 2"
@@ -449,6 +542,7 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
             .previewInterfaceOrientation(.landscapeLeft)
+            .environmentObject(DiffScreens())
 
     }
 }
