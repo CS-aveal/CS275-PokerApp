@@ -1,4 +1,4 @@
-const prompt = require('prompt-sync')()
+//const prompt = require('prompt-sync')()
 
 const Suit = {
     spade: 0,
@@ -434,7 +434,8 @@ class Player{
 }
 
 class Round{
-    constructor(){
+    constructor(ID){
+        this.id = ID;
         this.state
         this.deck = new Deck();
         this.deck.shuffle();
@@ -478,7 +479,7 @@ class Round{
 
 //r = round
 //act = required action (DealerAction enum)
-async function doDealerAction(act){
+function doDealerAction(act){
     r.highestBet = 0;
     for(i in r.allPlayers){
         r.allPlayers[i].totalBet = 0;
@@ -740,7 +741,7 @@ let matt = new Player("Matt", 100)
 let austin = new Player("Austin", 100)
 let drew = new Player("Drew", 100)
 //create round instance
-let r = new Round();
+let r = new Round("123");
 //add each player to round
 r.addPlayer(heshi)
 r.addPlayer(matt)
