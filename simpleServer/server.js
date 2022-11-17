@@ -738,24 +738,22 @@ function startGame(gameCode){
     }
 }
 
-
-
-async function doDealerAction(r, act){
+//r = round
+//act = required action (DealerAction enum)
+function doDealerAction(act){
     r.highestBet = 0;
-    for(i in r.playersIn){
-        r.playersIn[i].totalBet = 0;
+    for(i in r.allPlayers){
+        r.allPlayers[i].totalBet = 0;
     }
     switch(act){
             case DealerAction.dealPlayers:
-            r.deck.shuffle;
-            r.playersIn = r.allPlayers;
-            for(let c in r.playersIn){
-                console.log("dealing hand for %s", r.playersIn[c].name);
-                if(r.playersIn[c].dealer == true){
+            for(let c in r.allPlayers){
+                console.log("dealing hand for %s", r.allPlayers[c].name);
+                if(r.allPlayers[c].dealer == true){
                     console.log("<Dealer>")
                 }
-                r.playersIn[c].dealPrivateHand(r.deck);
-                console.log(r.playersIn[c].privateHand);
+                r.allPlayers[c].dealPrivateHand(r.deck);
+                console.log(r.allPlayers[c].privateHand);
             }
             break;
             case DealerAction.dealFlop:
@@ -802,80 +800,121 @@ async function doDealerAction(r, act){
             console.log("paying winner %s", r.potSize)
             r.playersIn[winnerIndex].stack += r.potSize;
             //wait
-            await new Promise(r => setTimeout(r, 5000));
-            console.log("resetting round")
+            //await new Promise(r => setTimeout(r, 5000));
+            console.log("resetting round");
             r.resetRound();
             break;
     }
     //call determineAction, passing as an argument the action that just happened
-    console.log("calling determineAction");
-    determineAction(r, act, -1, 0);
+    determineAction(act, -1, 0);
 }
 
-async function determineAction(r, prevAct, player, val){
+//inputChoices = Choices enum
+//this function will be called by determineAction function. It will cue the appropriate handler depending on what choices are available, which will send the input request to the player
+//The input that is recieved will not come back to this function. When it is recieved, determine action will be called with the recieved input as an argument.
+//Because input doesn't come back to here, determineAction or doDealerAction will need to handle the events associated with playerInput choices, like removing a player when they fold, or updating pot and stack values when a bet is made.
+
+//everything done needs to be outputted to the UI via a handler, so we'll need a handler for everything like removing the player after they fold, dealing cards,changing pots, and any other changes that need to be observed in the UI. For now, all those actions are done directly, but we'll need to add calls to the handlers so that the UI gets updated too.
+
+function getPlayerInput(inputChoices, playerIndex){
+    switch(inputChoices){
+            case Options.noCheck:
+            console.log("player cannot check")
+            break;
+            case Options.noCall:
+            console.log("player cannot call")
+            break;
+    }
+    let input2 = 0;
+    console.log("Input for player with index %i: %s", playerIndex, r.allPlayers[playerIndex].name);
+    let input1 = prompt("enter action: ");
+    if (input1 == "raise"){
+        input2 = prompt("enter raise amount: ");
+    }
+    let pick;
+    
+    //determineAction(pick, playerIndex, Number(input2)); this call will happen from input function
+}
+
+
+//helper functions
+function getNextIndex(arr, i){
+    let ind = increment(arr,i)
+    while(r.allPlayers[ind].folded == true){
+        ind = r.currentPlayerIndex = increment(arr,ind)
+    }
+    return ind;
+}
+function increment(arr,i){
+    if(i >= arr.length -1){
+        return 0;
+    } else{
+        return i + 1
+    }
+}
+function getPrevIndex(arr, i){
+    let ind = decrement(arr,i)
+    while(r.allPlayers[ind].folded == true){
+        ind = r.currentPlayerIndex = decrement(arr,ind)
+    }
+    return ind;
+}
+function decrement(arr,i){
+    if(i == 0){
+        return arr.length -1;
+    } else{
+        return i - 1
+    }
+}
+
+//prevAct = Choice enum or dealerAction enum. Tells what action just occured.
+//player = player index of player that just acted. -1 if dealer.
+//val = bet/call value associated with player action.
+function determineAction(prevAct, player, val){
     if(player >= 0){ //the last action was a player action
         //First, make update according to action taken
         if(prevAct == Choice.fold){
-            console.log("%s folded", r.playersIn[player].name);
+            console.log("%s folded", r.allPlayers[player].name);
+            r.allPlayers[player].folded = true;
+            let remInd = r.playersIn.indexOf(r.allPlayers[player]);
+            r.playersIn.splice(remInd,1);
+            
         } else if(prevAct == Choice.check){
-            console.log("%s checked", r.playersIn[player].name);
+            console.log("%s checked", r.allPlayers[player].name);
             //do nothing?
         }else if(prevAct == Choice.call){
-            console.log("%s called", r.playersIn[player].name);
-            let callAmt = r.highestBet - r.playersIn[player].totalBet
-            r.playersIn[player].totalBet += callAmt;
-            r.playersIn[player].stack -= callAmt;
+            console.log("%s called", r.allPlayers[player].name);
+            let callAmt = r.highestBet - r.allPlayers[player].totalBet
+            r.allPlayers[player].totalBet += callAmt;
+            r.allPlayers[player].stack -= callAmt;
             r.potSize += callAmt;
         }else if(prevAct == Choice.raise){
-            console.log("%s raised by %s", r.playersIn[player].name, val);
+            console.log("%s raised by %s", r.allPlayers[player].name, val);
             r.highestBet += val; //make sure val = raise amount, not total bet for this to be right
-            r.playersIn[player].stack -= r.highestBet;
-            r.playersIn[player].totalBet += r.highestBet;
+            r.allPlayers[player].stack -= r.highestBet;
+            r.allPlayers[player].totalBet += r.highestBet;
             r.potSize += r.highestBet;
         }
-        if(player == r.dealerIndex){
+        if(player == r.lastPlayerIndex){
             r.dealerPlayed = true;
-            console.log("Dealer (%s) played", r.playersIn[player].name)
+            console.log("Last player %s played", r.allPlayers[player].name)
         }
-        //UPDATE INDEXES
         if(prevAct == Choice.fold){
-            let dealerFolded = false;
-            if(player == r.dealerIndex){
-                dealerFolded = true;
+            if(player == r.lastPlayerIndex){
+                console.log("decremented last player index")
+                r.lastPlayerIndex = decrement(r.allPlayers, r.lastPlayerIndex);
             }
-            //remove player from playersIn
-            r.playersIn.splice(player,1);
-            if(dealerFolded){
-                if(player == 0){
-                    r.dealerIndex = r.playerIn.length - 1;
-                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
-                } else {
-                    r.dealerIndex -= 1;
-                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
-                }
-            } else{
-                if(player <= r.dealerIndex){
-                    r.dealerIndex -= 1;
-                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
-                } else{
-                    r.currentPlayerIndex = getNextIndex(r.dealerIndex);
-                }
-            }
-        } else{
-            r.currentPlayerIndex = getNextIndex(r.playersIn,r.currentPlayerIndex)
-            console.log("potsize: %s", r.potSize)
-            console.log("%s's stack size: %s",r.playersIn[player].name, r.playersIn[player].stack)
         }
+        
+        console.log("potsize: %s", r.potSize)
+        console.log("%s's stack size: %s",r.allPlayers[player].name, r.allPlayers[player].stack)
         
         //Next, determine next action
         if(r.playersIn.length == 1){ //if only 1 player left
             //round over via fold
-            //pay winner
-            r.playersIn[0].stack += r.potSize;
-            //wait 5 seconds
-            await new Promise(r => setTimeout(r, 5000));
-            //reset round
-            r.resetRound();
+            r.state = State.over;
+            doDealerAction(DealerAction.endRound);
+            
         } else if (r.dealerPlayed && r.playersIn.every(player => player.totalBet == r.highestBet)){
             //if dealer has played and each player has called highest bet
             //end betting round, proceed to deal next card or complete round
@@ -899,55 +938,37 @@ async function determineAction(r, prevAct, player, val){
                     act = DealerAction.endRound;
                     break;
             }
-            console.log("Calling doDealerAction");
-            doDealerAction(r, act);
+            doDealerAction(act);
             
         } else{
             //continue betting round
-            
+            //UPDATE INDEXES
+            r.currentPlayerIndex = getNextIndex(r.allPlayers,r.currentPlayerIndex)
             //set options
             let opt;
-            if(r.playersIn[r.currentPlayerIndex].totalBet == r.highestBet){
+            if(r.allPlayers[r.currentPlayerIndex].totalBet == r.highestBet){
                 opt = Options.noCall;
-            } else if(r.playersIn[r.currentPlayerIndex].totalBet < r.highestBet){
+            } else if(r.allPlayers[r.currentPlayerIndex].totalBet < r.highestBet){
                 opt = Options.noCheck;
             }
-            getPlayerInput(r, opt, r.currentPlayerIndex);
+            //GET RID OF LAST ARGUMENT, USE r.currentPlayerIndex INSIDE GETINPUT FUNCTION
+            getPlayerInput(opt, r.currentPlayerIndex);
         }
     }
     else if(player == -1){//dealer action just happened
         if(prevAct == DealerAction.dealPlayers || prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
             //time for another betting round.
-            r.currentPlayerIndex = getNextIndex(r.playersIn, r.dealerIndex);
+            r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
             //call input function with players options
-            getPlayerInput(r, Options.noCall, r.currentPlayerIndex);
+            getPlayerInput(Options.noCall, r.currentPlayerIndex);
         }
         else if(prevAct == DealerAction.endRound){
             console.log("Starting another round")
-            doDealerAction(r, DealerAction.dealPlayers)
+            doDealerAction(DealerAction.dealPlayers)
         }
     }
 }
 
-function getPlayerInput(r, inputChoices, playerIndex){
-    switch(inputChoices){
-            case Options.noCheck:
-            console.log("player cannot check")
-            break;
-            case Options.noCall:
-            console.log("player cannot call")
-            break;
-    }
-    let input2 = 0;
-    console.log("Input for player with index %i: %s", playerIndex, r.playersIn[playerIndex].name);
-    //Put the current players index possibly the actual socketID
-    getPlayerInputSwift(r.currentPlayerIndex);
-    let input1 = prompt("enter action: ");
-    if (input1 == "raise"){
-        input2 = prompt("enter raise amount: ");
-    }
-    
-}
 
 function playerTurn(player) {
   return p1 * p2;
