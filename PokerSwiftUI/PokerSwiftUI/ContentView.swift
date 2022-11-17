@@ -9,17 +9,26 @@ import SwiftUI
 
 class DiffScreens: ObservableObject {
     
-    @Published var home: Bool = false
-    @Published var createGame: Bool = false
-    @Published var joinGame: Bool = false
-    @Published var inGame: Bool = true
+    @Published var home: Bool!
+    @Published var createGame: Bool!
+    @Published var joinGame: Bool!
+    @Published var inGame: Bool!
+    
+    init() {
+        
+        self.home = true
+        self.createGame = false
+        self.joinGame = false
+        self.inGame = false
+        
+    }
     
     
 }
 
 struct ContentView: View {
     
-    @ObservedObject var screens: DiffScreens = DiffScreens()
+    @EnvironmentObject var screens: DiffScreens
     
     var body: some View {
         
@@ -40,6 +49,83 @@ struct ContentView: View {
     } // Body view
     
 } // ContentView
+
+struct AppHome: View {
+    
+    @EnvironmentObject var screens: DiffScreens
+    
+    var body: some View {
+            
+            ZStack {
+                
+                Image("Homepage")
+                    .resizable()
+                    .frame(width:865.0, height: 425.0)
+                
+                // game creation
+                // 4 digit game code
+                // low medium high stakes ( sets the values of all the blinds)
+                    // buy in values ( set values per stakes)
+                // game join
+                // box to type in code
+                // joined to game automatically
+                
+                VStack {
+                    
+                    Spacer()
+                    Spacer()
+                    Spacer()
+                    
+                    HStack{
+                            Spacer()
+                        
+                            Button(action: {
+                                // Change to create game screen
+                                self.screens.home = false
+                                self.screens.createGame = true
+                                
+                                
+                            }, label: {
+                                Text("Create")
+                                    .padding()
+                                    .foregroundColor(Color.black)
+                                    .background(Color.white)
+                                    .border(Color.black, width: 3)
+                                    .font(.system(size: 30, weight: .bold, design: .monospaced))
+                            })
+                        
+                            Spacer()
+                            
+                            Button(action: {
+                                // Change to join game screen
+                                self.screens.home = false
+                                self.screens.joinGame = true
+                                
+                                
+                            }, label: {
+                                Text("Join")
+                                    .padding()
+                                    .padding(.leading, 20)
+                                    .padding(.trailing, 20)
+                                    .foregroundColor(Color.black)
+                                    .background(Color.white)
+                                    .border(Color.black, width: 3)
+                                    .font(.system(size: 30, weight: .bold, design: .monospaced))
+                            })
+                        
+                            Spacer()
+                            
+                    }
+                    
+                    Spacer()
+                    
+                }
+            
+            }
+        
+     }
+    
+}
 
 struct createGameView: View {
     
@@ -358,82 +444,6 @@ struct inGameView: View {
     
 }
 
-struct AppHome: View {
-    
-    @ObservedObject var screens: DiffScreens = DiffScreens()
-    
-    var body: some View {
-            
-            ZStack {
-                
-                Image("Homepage")
-                    .resizable()
-                    .frame(width:865.0, height: 425.0)
-                
-                // game creation
-                // 4 digit game code
-                // low medium high stakes ( sets the values of all the blinds)
-                    // buy in values ( set values per stakes)
-                // game join
-                // box to type in code
-                // joined to game automatically
-                
-                VStack {
-                    
-                    Spacer()
-                    Spacer()
-                    Spacer()
-                    
-                    HStack{
-                            Spacer()
-                        
-                            Button(action: {
-                                // Change to create game screen
-                                self.screens.home = false
-                                self.screens.createGame = true
-                                
-                                
-                            }, label: {
-                                Text("Create")
-                                    .padding()
-                                    .foregroundColor(Color.black)
-                                    .background(Color.white)
-                                    .border(Color.black, width: 3)
-                                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                            })
-                        
-                            Spacer()
-                            
-                            Button(action: {
-                                // Change to join game screen
-                                screens.home = false
-                                screens.joinGame = true
-                                
-                                
-                            }, label: {
-                                Text("Join")
-                                    .padding()
-                                    .padding(.leading, 20)
-                                    .padding(.trailing, 20)
-                                    .foregroundColor(Color.black)
-                                    .background(Color.white)
-                                    .border(Color.black, width: 3)
-                                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                            })
-                        
-                            Spacer()
-                            
-                    }
-                    
-                    Spacer()
-                    
-                }
-            
-            }
-        
-     }
-    
-}
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {

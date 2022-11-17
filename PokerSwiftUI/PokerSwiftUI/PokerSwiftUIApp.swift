@@ -12,6 +12,8 @@ struct PokerSwiftUIApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(DiffScreens())
+                
         }
     }
 }
