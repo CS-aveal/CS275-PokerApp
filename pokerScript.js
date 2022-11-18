@@ -1,4 +1,4 @@
-//const prompt = require('prompt-sync')()
+const prompt = require('prompt-sync')()
 
 const Suit = {
     spade: 0,
@@ -277,8 +277,6 @@ class PlayerHand{
 //compare 2 playerHands
 //returns 1 if first is better, 2 if second is better, 0 if tie
 //first = first playerHand, second = second playerHand
-//INCOMPLETE: needs to check cases where rank is equal
-//FOR NOW: determine winner with maximum playerHand.rank
 function compareHands(first, second){
     if (first.rank > second.rank){
         return 1;
@@ -434,9 +432,10 @@ class Player{
 }
 
 class Round{
-    constructor(ID){
+    constructor(ID, stakes){
         this.id = ID;
-        this.state
+        this.stakes = stakes;
+        this.state;
         this.deck = new Deck();
         this.deck.shuffle();
         this.allPlayers = [];
@@ -711,7 +710,38 @@ function determineAction(prevAct, player, val){
         }
     }
     else if(player == -1){//dealer action just happened
-        if(prevAct == DealerAction.dealPlayers || prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
+        if(prevAct == DealerAction.dealPlayers){
+            let smallBlind;
+            switch(r.stakes){
+                    case 0:
+                    smallBlind = 5;
+                    break;
+                    case 1:
+                    smallBlind = 10;
+                    break;
+                    case 2:
+                    smallBlind = 25;
+                    break;
+            }
+            r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
+            
+            r.allPlayers[r.currentPlayerIndex].stack -= smallBlind;
+            r.allPlayers[r.currentPlayerIndex].totalBet += smallBlind;
+            r.potSize += smallBlind;
+            
+            r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
+            
+            r.allPlayers[r.currentPlayerIndex].stack -= smallBlind*2;
+            r.allPlayers[r.currentPlayerIndex].totalBet += smallBlind*2;
+            r.potSize += smallBlind*2;
+        
+            r.highestBet += smallBlind*2;
+            
+            r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
+            getPlayerInput(Options.noCheck, r.currentPlayerIndex);
+
+        }
+        else if(prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
             //time for another betting round.
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
             //call input function with players options
@@ -732,7 +762,6 @@ function startGame(){
     r.state = State.preflop;
     r.allPlayers[0].setDealer();
     doDealerAction(DealerAction.dealPlayers)
-    doDealerAction(DealerAction.dealPlayers)
 }
 //To start
 //create each player
@@ -741,7 +770,7 @@ let matt = new Player("Matt", 100)
 let austin = new Player("Austin", 100)
 let drew = new Player("Drew", 100)
 //create round instance
-let r = new Round("123");
+let r = new Round("123",2);
 //add each player to round
 r.addPlayer(heshi)
 r.addPlayer(matt)
