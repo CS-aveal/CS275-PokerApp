@@ -446,7 +446,9 @@ class Player{
 }
 
 class Round{
-    constructor(){
+    constructor(ID, stakes){
+        this.ID = ID;
+        this.stakes = stakes;
         this.state
         this.deck = new Deck();
         this.deck.shuffle();
@@ -518,96 +520,10 @@ io.sockets.on('connection', function(socket) {
         io.sockets.emit('iOS Client Port', {msg: 'Hi iOS Client!'}, {msg1: ['Hello', 'World']});
     });
     
-    socket.on('Create Game', function(data) {
-        //create a player struct for the person creating the game
-        console.log(data);
-        
-        firstPlayerHand = new PLayerHand();
-        
-        arbitraryPlayer = new Player(socket.id, firstPlayerHand);
-        
-        users = [];
-        users.push(arbitraryPlayer);
-        
-        
-        gameList[gameList.length] = new GameIteration(gameIdCounter, gameCodeCounter, users, false);
-        gameIdCounter += 1;
-        gameCodeCounter += 1;
-        
-        console.log(gameList[0].id);
-        console.log(gameList[0].code);
-        console.log(gameList[0].userList);
-        
-        //io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
-        var stringOutput = "User ";
-        stringOutput += String(socket.id);
-        stringOutput += " created the game with id ";
-        stringOutput += String(gameIdCounter - 1);
-        io.to(socket.id).emit("Created Game", {msg: stringOutput});
-    });
-    //cannot be a handle event start game is going to have to call a method
-    socket.on('Start Game', function(data) {
-        
-        //onlything needed in start game is the call to the function start game
-        
-        startGame(data);
-        
-        /* this data needs to be inside the start game method*/
-        //Determine who goes first by just letting the host go first
-        //data is going to be the game code
-        //just did less than because it is zero indexed
-        
-        for (let i = 0; i < gameList.length; i++){
-            if (gameList[i].code == data){
-                //Start the game functions
-                gameRunning = true
-                gameList[i].userTurn = gameList[i].users[0]
-                while (gameRunning){
-                    
-                    //emit to the socket that needs to play its turn
-                    playerTurn(gameList[i].userTurn)
-                }
-            }
-            else{
-                //game code was not in the list of games
-            }
-        }
-        
-        io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
-    });
     
-    socket.on('Created Game', function(data) {
-        
-        //onlything needed in start game is the call to the function start game
-        
-        startGame(data);
-        for (let i = 0; i < data.length; i++){
-            
-        }
-        
-        /* this data needs to be inside the start game method*/
-        //Determine who goes first by just letting the host go first
-        //data is going to be the game code
-        //just did less than because it is zero indexed
-        
-        for (let i = 0; i < gameList.length; i++){
-            if (gameList[i].code == data){
-                //Start the game functions
-                gameRunning = true
-                gameList[i].userTurn = gameList[i].users[0]
-                while (gameRunning){
-                    
-                    //emit to the socket that needs to play its turn
-                    playerTurn(gameList[i].userTurn)
-                }
-            }
-            else{
-                //game code was not in the list of games
-            }
-        }
-        
-        io.sockets.emit('Display Game', {game: 'Poker'}, {buyin: '25'});
-    });
+    //cannot be a handle event start game is going to have to call a method
+    
+    
     
     socket.on('Add Player', function(data) {
         
@@ -622,40 +538,22 @@ io.sockets.on('connection', function(socket) {
         io.to(socket.id).emit("Player Added", {msg: "Player Added"});
         
     });
-    
-    socket.on('Player Turn Done', function(data) {
-        //this will now need to log the players turn and say it is the next persons turn
-        //do this by
+    socket.on('Create Game', function(data) {
         
-        //The data will be the players turn
-        //TODO FIGURE OUT HOW TO HANDLE DATA TO HAVE INPUT BE STRING
+        //onlything needed in start game is the call to the function start game
         
-        let pick;
-        switch(input1){
-                case "fold":
-                pick = Choice.fold;
-                break;
-                case "check":
-                pick = Choice.check;
-                break;
-                case "call":
-                pick = Choice.call;
-                break;
-                case "raise":
-                pick = Choice.raise;
-                break;
-        }
-        determineAction(r, pick, playerIndex, Number(input2));
+        
+        
+        
+        round1 = new Round(data[0],data[2]);
+        round1.addPlayer(new Player(data[1], 100));
+        console.log(round1);
+        sendBackCreateSuccessful(socket.id, round1);
+        
     });
     
-    socket.on('Start Game', function(data) {
-        //this will now need to log the players turn and say it is the next persons turn
-        //do this by
-        
-        //need to pass in the round which will be created once create game was called so instance is already created
-        
-        startGame(r);
-    });
+    
+    
     
     socket.on('Start Round', function(data) {
         //this will now need to log the players turn and say it is the next persons turn
@@ -667,43 +565,7 @@ io.sockets.on('connection', function(socket) {
         gameList.push(round1);
     });
     
-    socket.on('Join Game', function(data) {
-        //create a player struct for the person joining the game
-        //will have to see if the player is already in the game before trying to add it as a player struct
-        console.log(data);
-        /*
-         data will be the game code
-         */
-        var valid = true;
-        
-        for (let i = 0; i < gameList.length; i++) {
-            if (gameList[i].code == data){
-                if (gameList[i].userList.length == maxPlayerCount){
-                    io.to(socket.id).emit("Join Game Invalid", {msg: "Too many players already in game"});
-                    valid = false;
-                }
-                else if (gameList[i].userList.length > 0 && gameList[i].userList.length < maxPlayerCount){
-                    for (let l = 0; l < gameList[i].userList.length; l++){
-                        if (socket.id == gameList[i].userList[l]){
-                            io.to(socket.id).emit("Join Game Invalid",{msg: "User already in game"});
-                            valid = false;
-                        }
-                    }
-                    if (valid == true){
-                        gameList[i].userList.push(socket.id);
-                        var specificId = String(socket.id);
-                        console.log("About to emit New Player");
-                        io.sockets.emit("New Player", {player: specificId});
-                        io.to(specificId).emit("Join Game Successful", {msg: "Successfully joined game"});
-                    }
-                }
-            }
-        }
-        
-        console.log(gameList[0].userList);
-        
-        io.sockets.emit('Display Game', {msg: ['Hello', 'World']});
-    });
+    
 });
 
 
@@ -962,4 +824,8 @@ function startGame(r){
 
 function getPlayerInputSwift(socketID) {
     io.to(socketID).emit("Player Turn", {msg: "Your turn"});
+}
+
+function sendBackCreateSuccessful(socketID, round){
+    io.to(socketID).emit("Create Success", round.id);
 }

@@ -12,6 +12,7 @@ struct SocketAppApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(DiffScreens())
         }
     }
 }
