@@ -39,6 +39,8 @@ class Card{
     }
 }
 
+var gameList = new Array();
+
 //return 1 if first card is higher, 2 if second is higher, 0 if equal
 function compareCard(first,second){
     if(first.number < second.number){
@@ -449,7 +451,7 @@ class Round{
     constructor(ID, stakes){
         this.ID = ID;
         this.stakes = stakes;
-        this.state
+        this.state;
         this.deck = new Deck();
         this.deck.shuffle();
         this.allPlayers = [];
@@ -547,8 +549,37 @@ io.sockets.on('connection', function(socket) {
         
         round1 = new Round(data[0],data[2]);
         round1.addPlayer(new Player(data[1], 100));
+        gameList.push(round1);
+        console.log("HERE");
         console.log(round1);
         sendBackCreateSuccessful(socket.id, round1);
+        
+    });
+    socket.on('Join Game', function(data) {
+        
+        //onlything needed in start game is the call to the function start game
+        
+        for (let i = 0; i < gameList.length; i++){
+            if (gameList[i].ID == data[0]){
+                for (let l = 0; l < gameList[i].playersIn.length; l++){
+                    if (gameList[i].playersIn[l].name ==  data[1]){
+                        //if the name is already in the game then send back an event saying the name is already in game
+                        sendBackJoinGameUnsuccessful(socket.id, data[0]);
+                    }
+                }
+            }
+        }
+        
+        for (let i = 0; i < gameList.length; i++){
+            if (gameList[i].ID == data[0]){
+                //add player into the game
+                gameList[i].addPlayer(new Player(data[1], 100));
+            }
+        }
+        
+        //join game was successful
+        console.log(round1);
+        sendBackJoinSuccessful(socket.id, round1);
         
     });
     
@@ -845,6 +876,14 @@ function startGame(r){
 
 function getPlayerInputSwift(socketID) {
     io.to(socketID).emit("Player Turn", {msg: "Your turn"});
+}
+
+function sendBackJoinSuccessful(socketID, round){
+    io.to(socketID).emit("Join Successful", round.id);
+}
+
+function sendBackJoinGameUnsuccessful(socketID, round){
+    io.to(socketID).emit("Join Unsuccessful", round.id);
 }
 
 function sendBackCreateSuccessful(socketID, round){

@@ -24,14 +24,18 @@ class DiffScreens: ObservableObject {
     @Published var home: Bool!
     @Published var createGame: Bool!
     @Published var joinGame: Bool!
+    @Published var waiting: Bool!
     @Published var inGame: Bool!
+    @Published var isHost: Bool!
     
     init() {
         
         self.home = true
         self.createGame = false
         self.joinGame = false
+        self.waiting = false
         self.inGame = false
+        self.isHost = false
         
     }
     
@@ -39,6 +43,17 @@ class DiffScreens: ObservableObject {
     
 }
 
+class Observables: ObservableObject {
+    
+    @Published var host: Int!
+    
+    init() {
+        
+        self.host = 0
+        
+    }
+    
+}
 
 
 
@@ -207,13 +222,11 @@ final class Service: ObservableObject {
         }
         
         
-        socket.on("Join Game Invalid") { [weak self] (data, ack) in
-            if let data = data[0] as? [String: String],
-                let rawMessage = data["msg"]{
-                 DispatchQueue.main.async {
-                     self?.errorMessages.append(rawMessage)
-                 }
-             }
+        socket.on("Join Unsuccessful") { [weak self] (data, ack) in
+            
+            DispatchQueue.main.async {
+                self?.errorMessages.append("Join Game Unsuccessful")
+            }
             
         }
         
@@ -263,6 +276,23 @@ final class Service: ObservableObject {
         socket.emit("Create Game", settings)
     }
     
+    func sendJoinGame(_ code: String,_ name: String){
+        //settings is a dictionary
+        //this is so that I am able to pass all of the settings with the key word being the setting
+        //ie pot size and the value being the value of the pot size
+        var settings: [String] = []
+        var codeString: String
+        
+        codeString = String(code)
+        
+        let socket = manager.defaultSocket
+        socket.connect()
+        settings.append(codeString)
+        settings.append(name)
+        
+        socket.emit("Join Game", settings)
+    }
+    
 }
 
 
@@ -283,6 +313,9 @@ struct ContentView: View {
         }
         if screens.joinGame == true {
             joinGameView()
+        }
+        if screens.waiting == true {
+            waitingView()
         }
         
         
@@ -425,7 +458,11 @@ struct createGameView: View {
                 Button(action: {
                     
                     //submit
+                    self.screens.isHost = true
+                    self.screens.createGame = false
+                    self.screens.waiting = true
                     service.sendCreateGame(code, name, stake)
+                    
                     
                 }, label: {
                     Text("SUBMIT")
@@ -446,6 +483,7 @@ struct createGameView: View {
 struct joinGameView: View {
     
     @ObservedObject var screens: DiffScreens = DiffScreens()
+    @ObservedObject var service = Service()
     
     @State private var joinName: String = ""
     @State private var joinCode: String = ""
@@ -485,9 +523,14 @@ struct joinGameView: View {
                     
                     //submit
                     
+                    service.sendJoinGame(joinCode, joinName)
+                    self.screens.joinGame = false
+                    self.screens.waiting = true
                     
                     
                     
+                    
+
                 }, label: {
                     Text("SUBMIT")
                         .font(.system(size: 30, weight: .bold, design: .monospaced))
@@ -504,6 +547,71 @@ struct joinGameView: View {
     }
     
 }
+
+struct waitingView: View {
+    
+    @EnvironmentObject var screens: DiffScreens
+    @EnvironmentObject var vars: Observables
+    
+    var body: some View{
+        
+        ZStack {
+            
+            Color.green
+                .ignoresSafeArea()
+            
+            // If user is host
+            if self.screens.isHost {
+                
+                VStack{
+                    
+                    Text("Waiting for host to start the game...")
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    
+                    // Start game button
+                    Button(action: {
+                        
+                        //Start game action
+                        
+                        
+                        self.screens.waiting = false
+                        self.screens.inGame = true
+                        
+                        
+                    }, label: {
+                        Text("START GAME")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+
+                    })
+                    
+                    
+                    
+                    
+                }
+                
+                
+                
+            }
+            // If user is not host
+            if !self.screens.isHost {
+                
+                
+                VStack{
+                    
+                    Text("Waiting for host to start the game...")
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    
+                }
+                
+            }
+        
+            
+        }
+        
+    }
+    
+}
+
 
 struct inGameView: View {
     
