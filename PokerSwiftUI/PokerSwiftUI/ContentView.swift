@@ -33,11 +33,11 @@ class DiffScreens: ObservableObject {
 
 class Observables: ObservableObject {
     
-    @Published var host: Int!
+    @Published var playerID: Int!
     
     init() {
         
-        self.host = 0
+        self.playerID = 0
         
     }
     
@@ -360,16 +360,36 @@ struct inGameView: View {
     
     @EnvironmentObject var screens: DiffScreens
     
-    var p1Name = "Player 1"
-    var p2Name = "Player 2"
-    var p3Name = "Player 3"
-    var p4Name = "Player 4"
+    @State private var p1Name = "Player 1"
+    @State private var p2Name = "Player 2"
+    @State private var p3Name = "Player 3"
+    @State private var p4Name = "Player 4"
     
-    var p1Chips = 0.00
-    var p2Chips = 0.00
-    var p3Chips = 0.00
-    var p4Chips = 0.00
-    var potVal = 0.00
+    @State private var p1Chips = 0.00
+    @State private var p2Chips = 0.00
+    @State private var p3Chips = 0.00
+    @State private var p4Chips = 0.00
+    @State private var potVal = 0.00
+    
+    @State private var p1Card1 = "backOfCard"
+    @State private var p1Card2 = "backOfCard"
+    
+    @State private var p2Card1 = "backOfCard"
+    @State private var p2Card2 = "backOfCard"
+    
+    @State private var p3Card1 = "backOfCard"
+    @State private var p3Card2 = "backOfCard"
+    
+    @State private var p4Card1 = "backOfCard"
+    @State private var p4Card2 = "backOfCard"
+    
+    @State private var potCard1 = "backOfCard"
+    @State private var potCard2 = "backOfCard"
+    @State private var potCard3 = "backOfCard"
+    @State private var potCard4 = "backOfCard"
+    @State private var potCard5 = "backOfCard"
+    
+    
     
     
     var body: some View {
@@ -394,8 +414,8 @@ struct inGameView: View {
                             
                             
                             HStack{ // Two Cards
-                                Image("backOfCard")
-                                Image("backOfCard")
+                                Image("\(p2Card1)")
+                                Image("\(p2Card2)")
                                 
                             }
                             
@@ -410,8 +430,8 @@ struct inGameView: View {
                                 .bold()
                             
                             HStack{ // Two Cards
-                                Image("backOfCard")
-                                Image("backOfCard")
+                                Image("\(p3Card1)")
+                                Image("\(p3Card2)")
                             }
                             
                             Text("$ \(p3Chips, specifier: "%.2f")")
@@ -431,8 +451,8 @@ struct inGameView: View {
                                 .bold()
                             
                             HStack{ // Two Cards
-                                Image("backOfCard")
-                                Image("backOfCard")
+                                Image("\(p1Card1)")
+                                Image("\(p1Card2)")
                             }
                             
                             Text("$ \(p1Chips, specifier: "%.2f")")
@@ -447,11 +467,11 @@ struct inGameView: View {
                         VStack { // 5 delt cards and pot value
                             
                             HStack{ // 5 delt cards
-                                Image("backOfCard")
-                                Image("backOfCard")
-                                Image("backOfCard")
-                                Image("backOfCard")
-                                Image("backOfCard")
+                                Image("\(potCard5)")
+                                Image("\(potCard4)")
+                                Image("\(potCard3)")
+                                Image("\(potCard2)")
+                                Image("\(potCard1)")
                             }
                             
                             Text("$ \(potVal, specifier: "%.2f")")
@@ -470,8 +490,8 @@ struct inGameView: View {
                                 .bold()
                             
                             HStack{ // Two Cards
-                                Image("backOfCard")
-                                Image("backOfCard")
+                                Image("\(p4Card1)")
+                                Image("\(p4Card2)")
                             }
                             
                             Text("$ \(p4Chips, specifier: "%.2f")")
