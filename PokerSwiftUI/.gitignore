@@ -1,0 +1,5 @@
+.DS_Store
+Package.swift
+Sources/
+Tests/
+../.DS_Store
