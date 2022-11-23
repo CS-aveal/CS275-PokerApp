@@ -503,6 +503,23 @@ gameList = [];
 gameRunning = false
 
 
+// server inits happen here
+const { readFileSync } = require("fs");
+const { createServer } = require("https");
+const { Server } = require("socket.io");
+
+const httpServer = createServer({
+  key: readFileSync("/path/to/server-key.pem"),
+  cert: readFileSync("/path/to/server-cert.pem"),
+  requestCert: true,
+  ca: [
+    readFileSync("/path/to/client-cert.pem")
+  ]
+});
+
+// creates the io object ... Options tbd
+const io = new Server(httpServer, { /* options */ });
+
 server.listen(process.env.PORT || 3000);
 console.log('Server is running...');
 
