@@ -89,6 +89,7 @@ final class Service: ObservableObject {
             // obviously much more todo here just basic test
             print("Connected")
             
+            socket.emit("NodeJS Server Port", "Hi node.js server!")
         }
     }
     

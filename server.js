@@ -8,11 +8,37 @@ cors: {
 }
 });
 
+/*
+    - server sending data to players example
+
+ // server-side
+ io.on("connection", (socket) => {
+   socket.emit("hello", 1, "2", { 3: '4', 5: Buffer.from([6]) });
+ });
+
+ // client-side
+ socket.on("hello", (arg1, arg2, arg3) => {
+   console.log(arg1); // 1
+   console.log(arg2); // "2"
+   console.log(arg3); // { 3: '4', 5: ArrayBuffer (1) [ 6 ] }
+ });
+ 
+ - https://socket.io/docs/v3/emitting-events/
+    - Acknowledgements
+        - callback (can use to swap player after a player moves based on the proper return of the event the last thing can be a call back telling the server who is next in order
+
+ - Left to figure out
+ */
+
 io.on("connection", (socket) => {
     // how to add to players list
     console.log(socket.id);
     
 });
+
+io.on("NodeJS Server Port", (socket) => {
+    console.log
+})
 
 httpServer.listen(3000);
 
