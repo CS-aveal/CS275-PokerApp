@@ -83,8 +83,8 @@ final class Service: ObservableObject {
     
     
     init() {
-        // default wont wort here
-        let socket = manager.defaultSocket
+        // default wont wort here 
+        // const socket = io("http://cs275pokerserver.com");
         socket.on(clientEvent: .connect) { (data, ack) in
             print("Connected")
         }
