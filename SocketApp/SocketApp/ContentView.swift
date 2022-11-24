@@ -8,6 +8,15 @@
 import SwiftUI
 import SocketIO
 
+class formattedData: Identifiable {
+    var name = ""
+    var arrS: [String]?
+    var str: String?
+    var int: Int?
+    var intArr: [Int]?
+    var id = 0
+}
+
 
 class DiffScreens: ObservableObject {
     
@@ -41,9 +50,45 @@ class Observables: ObservableObject {
         
         self.host = 0
         
+        // Socket connection stuff happens here
+        
+        
     }
     
 }
+
+
+final class Service: ObservableObject {
+    // find server url to allow proper connection
+    private var manager = SocketManager(socketURL: URL(string: "http://cs275pokerserver.com")!, config: [.log(true), .compress])
+    
+    @Published var stringMessages = [String]()
+    @Published var stringArrayMessages = [[String]]()
+    @Published var intMessages = [Int]()
+    @Published var intArrayMessages = [[Int]]()
+    @Published var messages = [formattedData]()
+    @Published var otherPlayers = [String]()
+    @Published var errorMessages = [String]()
+    @Published var gameDetails = [String: String]()
+    @Published var userCards = [String: String]()
+    @Published var cardsInMiddle = [String: String]()
+    //homescreen will be true by default
+    //These have to be published attributes so that they will change and update in real time
+    @Published var homeScreen = true
+    @Published var createGameScreen = false
+    @Published var joinGameScreen = false
+    @Published var gameScreen = false
+    @Published var playerTurn = false
+    @Published var firstRound = false
+    
+    
+    init() {
+        // default wont wort here
+        let socket = manager.defaultSocket
+        socket.on(clientEvent: .connect) { (data, ack) in
+            print("Connected")
+        }
+    }
 
 struct ContentView: View {
     
