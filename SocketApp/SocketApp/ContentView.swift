@@ -87,10 +87,35 @@ final class Service: ObservableObject {
         let socket = manager.defaultSocket
         socket.on(clientEvent: .connect) { (data, ack) in
             // obviously much more todo here just basic test
-            print("Connected")
+            print("Connected");
             
-            socket.emit("NodeJS Server Port", "Hi node.js server!")
+            socket.emit("NodeJS Server Port", "Hi node.js server!");
+            
         }
+        
+        
+        
+        // socket code here to send the data to the server also recieve messages from the server here
+        socket.on("iOS Client Port", callback: { [weak self] (data, ack) in
+            if let data = data[0] as? [String: String],
+               let rawMessage = data["msg"]{
+                DispatchQueue.main.async {
+                    self?.stringMessages.append(rawMessage)
+                }
+            }
+        });
+        
+        //
+        socket.on("Created Game") { [weak self] (data, ack) in
+                    if let data = data[0] as? [String: String],
+                        let rawMessage = data["msg"]{
+                         DispatchQueue.main.async {
+                             self?.otherPlayers.append(rawMessage)
+                         }
+                     }
+                    
+        }
+        socket.connect()
     }
     
     struct ContentView: View {

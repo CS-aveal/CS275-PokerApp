@@ -34,11 +34,31 @@ io.on("connection", (socket) => {
     // how to add to players list
     console.log(socket.id);
     
+    // all socket.on things happen inside the connection so it only can try to do anything
+    // when the server is connected
+    socket.on('disconnect', function(data){
+            connections.splice(connections.indexOf(socket), 1);
+            console.log('Disconnect: %s sockets are connected', connections.length);
+    });
+    
+    socket.on('NodeJS Server Port', function(data) {
+        console.log(data);
+        io.sockets.emit('iOS Client Port', {msg: 'Hi iOS Client!'}});
+    });
+    
+    // test function for later after testing server its self
+    socket.on('Create Game', function(data) {
+        
+        //onlything needed in start game is the call to the function start game
+        round1 = new Round(data[0],data[2]);
+        round1.addPlayer(new Player(data[1], 100));
+        console.log(round1);
+        sendBackCreateSuccessful(socket.id, round1);
+        
+    });
+    
 });
 
-io.on("NodeJS Server Port", (socket) => {
-    console.log
-})
 
 httpServer.listen(3000);
 
