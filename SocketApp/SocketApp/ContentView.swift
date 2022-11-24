@@ -83,45 +83,47 @@ final class Service: ObservableObject {
     
     
     init() {
-        // default wont wort here 
-        // const socket = io("http://cs275pokerserver.com");
+        // default wont wort here
+        let socket = manager.defaultSocket
         socket.on(clientEvent: .connect) { (data, ack) in
+            // obviously much more todo here just basic test
             print("Connected")
+            
         }
     }
-
-struct ContentView: View {
     
-    @EnvironmentObject var screens: DiffScreens
-    
-    var body: some View {
+    struct ContentView: View {
         
-        if screens.home == true {
-            AppHome()
-        }
-        if screens.inGame == true {
-            inGameView()
-        }
-        if screens.createGame == true {
-            createGameView()
-        }
-        if screens.joinGame == true {
-            joinGameView()
-        }
-        if screens.waiting == true {
-            waitingView()
-        }
+        @EnvironmentObject var screens: DiffScreens
         
+        var body: some View {
+            
+            if screens.home == true {
+                AppHome()
+            }
+            if screens.inGame == true {
+                inGameView()
+            }
+            if screens.createGame == true {
+                createGameView()
+            }
+            if screens.joinGame == true {
+                joinGameView()
+            }
+            if screens.waiting == true {
+                waitingView()
+            }
+            
+            
+        } // Body view
         
-    } // Body view
+    } // ContentView
     
-} // ContentView
-
-struct AppHome: View {
-    
-    @EnvironmentObject var screens: DiffScreens
-    
-    var body: some View {
+    struct AppHome: View {
+        
+        @EnvironmentObject var screens: DiffScreens
+        
+        var body: some View {
             
             ZStack {
                 
@@ -132,7 +134,7 @@ struct AppHome: View {
                 // game creation
                 // 4 digit game code
                 // low medium high stakes ( sets the values of all the blinds)
-                    // buy in values ( set values per stakes)
+                // buy in values ( set values per stakes)
                 // game join
                 // box to type in code
                 // joined to game automatically
@@ -144,283 +146,283 @@ struct AppHome: View {
                     Spacer()
                     
                     HStack{
-                            Spacer()
+                        Spacer()
                         
-                            Button(action: {
-                                // Change to create game screen
-                                self.screens.home = false
-                                self.screens.createGame = true
-                                
-                                
-                            }, label: {
-                                Text("Create")
-                                    .padding()
-                                    .foregroundColor(Color.black)
-                                    .background(Color.white)
-                                    .border(Color.black, width: 3)
-                                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                            })
-                        
-                            Spacer()
+                        Button(action: {
+                            // Change to create game screen
+                            self.screens.home = false
+                            self.screens.createGame = true
                             
-                            Button(action: {
-                                // Change to join game screen
-                                self.screens.home = false
-                                self.screens.joinGame = true
-                                
-                                
-                            }, label: {
-                                Text("Join")
-                                    .padding()
-                                    .padding(.leading, 20)
-                                    .padding(.trailing, 20)
-                                    .foregroundColor(Color.black)
-                                    .background(Color.white)
-                                    .border(Color.black, width: 3)
-                                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                            })
-                        
-                            Spacer()
                             
+                        }, label: {
+                            Text("Create")
+                                .padding()
+                                .foregroundColor(Color.black)
+                                .background(Color.white)
+                                .border(Color.black, width: 3)
+                                .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        })
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            // Change to join game screen
+                            self.screens.home = false
+                            self.screens.joinGame = true
+                            
+                            
+                        }, label: {
+                            Text("Join")
+                                .padding()
+                                .padding(.leading, 20)
+                                .padding(.trailing, 20)
+                                .foregroundColor(Color.black)
+                                .background(Color.white)
+                                .border(Color.black, width: 3)
+                                .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        })
+                        
+                        Spacer()
+                        
                     }
                     
                     Spacer()
                     
                 }
-            
+                
             }
-        
-     }
-    
-}
-
-struct createGameView: View {
-    
-    @EnvironmentObject var screens: DiffScreens
-    @EnvironmentObject var vars: Observables
-    
-    @State private var name: String = ""
-    @State private var stake: String = ""
-    
-    let stakes = ["High", "Medium", "Low"]
-    let code = Int.random(in: 100...999)
-   
-    
-    var body: some View {
-        
-        
-        ZStack {
-            
-            Color.green
-                .ignoresSafeArea()
-            
-            VStack{
-                
-                Spacer()
-                
-                Text("Your Game Code: \(code)")
-                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                
-                Spacer()
-                
-                Text("Player name: ")
-                    .font(.system(size: 25, weight: .bold, design: .monospaced))
-                
-                TextField("Enter here...", text: $name)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.white)
-                    .font(.system(size: 25, weight: .bold, design: .monospaced))
-                
-                Spacer()
-                
-                Text("Selected Stake: \(stake)")
-                    .font(.system(size: 20, weight: .bold, design: .monospaced))
-                
-                Picker("Select a stake to play with", selection: $stake) {
-                    
-                    ForEach(stakes, id: \.self) {
-                        
-                        Text($0)
-                    }
-                    .pickerStyle(.menu)
-                    
-                }
-                
-                Spacer()
-                
-                Button(action: {
-                    
-                    //submit
-                    
-                    self.screens.isHost = true
-                    self.screens.createGame = false
-                    self.screens.waiting = true
-                    
-                    
-                }, label: {
-                    Text("SUBMIT")
-                        .font(.system(size: 30, weight: .bold, design: .monospaced))
-
-                })
-                
-            
-            }
-            
             
         }
         
     }
     
-}
-
-struct joinGameView: View {
-    
-    @EnvironmentObject var screens: DiffScreens
-    @EnvironmentObject var vars: Observables
-    
-    @State private var joinName: String = ""
-    @State private var joinCode: String = ""
-   
-    
-    var body: some View {
+    struct createGameView: View {
         
-        ZStack {
-            
-            Color.green
-                .ignoresSafeArea()
-            
-            VStack{
-                
-                Spacer()
-                
-                Text("Joining Poker Match...")
-                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                
-                Spacer()
-                
-                TextField("Enter the game code: ", text: $joinCode)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.white)
-                    .font(.system(size: 25, weight: .bold, design: .monospaced))
-                
-                Spacer()
-                
-                TextField("Enter your name: ", text: $joinName)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.white)
-                    .font(.system(size: 25, weight: .bold, design: .monospaced))
-                
-                Spacer()
-                
-                Button(action: {
-                    
-                    //submit
-                    
-                    
-                    self.screens.joinGame = false
-                    self.screens.waiting = true
-                    
-                    
-                }, label: {
-                    Text("SUBMIT")
-                        .font(.system(size: 30, weight: .bold, design: .monospaced))
-
-                })
-                
-                Spacer()
-                
-            }
-            
-            
-        }
+        @EnvironmentObject var screens: DiffScreens
+        @EnvironmentObject var vars: Observables
         
-    }
-    
-}
-
-struct waitingView: View {
-    
-    @EnvironmentObject var screens: DiffScreens
-    @EnvironmentObject var vars: Observables
-    
-    var body: some View{
+        @State private var name: String = ""
+        @State private var stake: String = ""
         
-        ZStack {
+        let stakes = ["High", "Medium", "Low"]
+        let code = Int.random(in: 100...999)
+        
+        
+        var body: some View {
             
-            Color.green
-                .ignoresSafeArea()
             
-            // If user is host
-            if self.screens.isHost {
+            ZStack {
+                
+                Color.green
+                    .ignoresSafeArea()
                 
                 VStack{
                     
-                    Text("Waiting for host to start the game...")
+                    Spacer()
+                    
+                    Text("Your Game Code: \(code)")
                         .font(.system(size: 30, weight: .bold, design: .monospaced))
                     
-                    // Start game button
+                    Spacer()
+                    
+                    Text("Player name: ")
+                        .font(.system(size: 25, weight: .bold, design: .monospaced))
+                    
+                    TextField("Enter here...", text: $name)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(Color.white)
+                        .font(.system(size: 25, weight: .bold, design: .monospaced))
+                    
+                    Spacer()
+                    
+                    Text("Selected Stake: \(stake)")
+                        .font(.system(size: 20, weight: .bold, design: .monospaced))
+                    
+                    Picker("Select a stake to play with", selection: $stake) {
+                        
+                        ForEach(stakes, id: \.self) {
+                            
+                            Text($0)
+                        }
+                        .pickerStyle(.menu)
+                        
+                    }
+                    
+                    Spacer()
+                    
                     Button(action: {
                         
-                        //Start game action
+                        //submit
                         
-                        
-                        self.screens.waiting = false
-                        self.screens.inGame = true
+                        self.screens.isHost = true
+                        self.screens.createGame = false
+                        self.screens.waiting = true
                         
                         
                     }, label: {
-                        Text("START GAME")
+                        Text("SUBMIT")
                             .font(.system(size: 30, weight: .bold, design: .monospaced))
-
+                        
                     })
                     
                     
-                    
-                    
                 }
                 
                 
-                
             }
-            // If user is not host
-            if !self.screens.isHost {
-                
-                
-                VStack{
-                    
-                    Text("Waiting for host to start the game...")
-                        .font(.system(size: 30, weight: .bold, design: .monospaced))
-                    
-                }
-                
-            }
-        
             
         }
         
     }
     
-}
-
-
-struct inGameView: View {
+    struct joinGameView: View {
+        
+        @EnvironmentObject var screens: DiffScreens
+        @EnvironmentObject var vars: Observables
+        
+        @State private var joinName: String = ""
+        @State private var joinCode: String = ""
+        
+        
+        var body: some View {
+            
+            ZStack {
+                
+                Color.green
+                    .ignoresSafeArea()
+                
+                VStack{
+                    
+                    Spacer()
+                    
+                    Text("Joining Poker Match...")
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    
+                    Spacer()
+                    
+                    TextField("Enter the game code: ", text: $joinCode)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(Color.white)
+                        .font(.system(size: 25, weight: .bold, design: .monospaced))
+                    
+                    Spacer()
+                    
+                    TextField("Enter your name: ", text: $joinName)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(Color.white)
+                        .font(.system(size: 25, weight: .bold, design: .monospaced))
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        
+                        //submit
+                        
+                        
+                        self.screens.joinGame = false
+                        self.screens.waiting = true
+                        
+                        
+                    }, label: {
+                        Text("SUBMIT")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        
+                    })
+                    
+                    Spacer()
+                    
+                }
+                
+                
+            }
+            
+        }
+        
+    }
     
-    @EnvironmentObject var screens: DiffScreens
+    struct waitingView: View {
+        
+        @EnvironmentObject var screens: DiffScreens
+        @EnvironmentObject var vars: Observables
+        
+        var body: some View{
+            
+            ZStack {
+                
+                Color.green
+                    .ignoresSafeArea()
+                
+                // If user is host
+                if self.screens.isHost {
+                    
+                    VStack{
+                        
+                        Text("Waiting for host to start the game...")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        
+                        // Start game button
+                        Button(action: {
+                            
+                            //Start game action
+                            
+                            
+                            self.screens.waiting = false
+                            self.screens.inGame = true
+                            
+                            
+                        }, label: {
+                            Text("START GAME")
+                                .font(.system(size: 30, weight: .bold, design: .monospaced))
+                            
+                        })
+                        
+                        
+                        
+                        
+                    }
+                    
+                    
+                    
+                }
+                // If user is not host
+                if !self.screens.isHost {
+                    
+                    
+                    VStack{
+                        
+                        Text("Waiting for host to start the game...")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        
+                    }
+                    
+                }
+                
+                
+            }
+            
+        }
+        
+    }
     
-    var p1Name = "Player 1"
-    var p2Name = "Player 2"
-    var p3Name = "Player 3"
-    var p4Name = "Player 4"
     
-    var p1Chips = 0.00
-    var p2Chips = 0.00
-    var p3Chips = 0.00
-    var p4Chips = 0.00
-    var potVal = 0.00
-    
-    
-    var body: some View {
-    
+    struct inGameView: View {
+        
+        @EnvironmentObject var screens: DiffScreens
+        
+        var p1Name = "Player 1"
+        var p2Name = "Player 2"
+        var p3Name = "Player 3"
+        var p4Name = "Player 4"
+        
+        var p1Chips = 0.00
+        var p2Chips = 0.00
+        var p3Chips = 0.00
+        var p4Chips = 0.00
+        var potVal = 0.00
+        
+        
+        var body: some View {
+            
             ZStack{ // ZStack for background
                 
                 Image("backgroundpoker")
@@ -579,18 +581,18 @@ struct inGameView: View {
                 } // Overall VStack
                 
             } // Overall ZStack
+            
+        } // Body view
         
-    } // Body view
+    }
     
-}
-
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-            .previewInterfaceOrientation(.landscapeLeft)
-            .environmentObject(DiffScreens())
-
+    
+    struct ContentView_Previews: PreviewProvider {
+        static var previews: some View {
+            ContentView()
+                .previewInterfaceOrientation(.landscapeLeft)
+                .environmentObject(DiffScreens())
+            
+        }
     }
 }
-
