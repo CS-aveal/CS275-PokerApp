@@ -849,7 +849,38 @@ function determineAction(prevAct, player, val){
         }
     }
     else if(player == -1){//dealer action just happened
-        if(prevAct == DealerAction.dealPlayers || prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
+        if(prevAct == DealerAction.dealPlayers){
+            let smallBlind;
+            switch(r.stakes){
+                    case 0:
+                    smallBlind = 5;
+                    break;
+                    case 1:
+                    smallBlind = 10;
+                    break;
+                    case 2:
+                    smallBlind = 25;
+                    break;
+            }
+            r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
+            
+            r.allPlayers[r.currentPlayerIndex].stack -= smallBlind;
+            r.allPlayers[r.currentPlayerIndex].totalBet += smallBlind;
+            r.potSize += smallBlind;
+            
+            r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
+            
+            r.allPlayers[r.currentPlayerIndex].stack -= smallBlind*2;
+            r.allPlayers[r.currentPlayerIndex].totalBet += smallBlind*2;
+            r.potSize += smallBlind*2;
+        
+            r.highestBet += smallBlind*2;
+            
+            r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
+            getPlayerInput(Options.noCheck, r.currentPlayerIndex);
+
+        }
+        else if(prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
             //time for another betting round.
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
             //call input function with players options
@@ -861,6 +892,7 @@ function determineAction(prevAct, player, val){
         }
     }
 }
+
 
 
 function playerTurn(player) {
