@@ -30,6 +30,7 @@ class DiffScreens: ObservableObject {
     @Published var isHost: Bool!
     
     
+    
     init() {
         
         self.home = true
@@ -48,9 +49,11 @@ final class Service: ObservableObject {
     private var manager = SocketManager(socketURL: URL(string: "ws://localhost:3000")!, config: [.log(true), .compress])
     
     @Published var stringMessages = [String]()
+    @Published var changed: Bool!
     
     init() {
         let socket = manager.defaultSocket
+        self.changed = false
         socket.on(clientEvent: .connect) { (data, ack) in
             print("Connected")
             
@@ -75,8 +78,10 @@ final class Service: ObservableObject {
             if let data = data[0] as? Int{
                 DispatchQueue.main.async {
                     self?.stringMessages.append(String(data))
+                    
                 }
             }
+            self?.changed = true
         }
     }
     
@@ -133,7 +138,7 @@ struct ContentView: View {
     
     @EnvironmentObject var screens: DiffScreens
     @EnvironmentObject var vars: Observables
-    let service = ServiceList()
+    @ObservedObject var service = Service()
     
     @State private var name: String = ""
     @State private var stake: String = ""
@@ -451,6 +456,7 @@ struct ContentView: View {
                         self.screens.isHost = true
                         self.screens.createGame = false
                         self.screens.waiting = true
+                        service.sendCreateGame(code, name, stake)
                         //code then name then stake
                         //ServiceList.service.sendCreateGame(code, name, stake)
                         
@@ -504,7 +510,7 @@ struct ContentView: View {
                         
                         self.screens.joinGame = false
                         self.screens.waiting = true
-                        //service.sendJoinGame(joinCode, joinName)
+                        service.sendJoinGame(joinCode, joinName)
                         
                         
                     }, label: {
@@ -533,6 +539,10 @@ struct ContentView: View {
                         
                         Text("Waiting for host to start the game...")
                             .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        
+                        if service.changed == true {
+                            Text("SendBack Successful")
+                        }
                         
                         // Start game button
                         Button(action: {
