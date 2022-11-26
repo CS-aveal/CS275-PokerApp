@@ -1,8 +1,8 @@
 //
-//  SocketAppApp.swift
-//  SocketApp
+//  PokerSwiftUIApp.swift
+//  PokerSwiftUI
 //
-//  Created by Austin Veal on 10/17/22.
+//  Created by Matthew McCarthy on 10/19/22.
 //
 
 import SwiftUI
@@ -13,6 +13,7 @@ struct SocketAppApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(DiffScreens())
+                
         }
     }
 }
