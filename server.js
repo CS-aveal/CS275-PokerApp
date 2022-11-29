@@ -1,10 +1,19 @@
-const { createServer } = require("http");
+const { readFileSync } = require("fs");
+const { createServer } = require("https");
 const { Server } = require("socket.io");
 
-const httpServer = createServer();
+const httpServer = createServer({
+    key: readFileSync("test/key.pem"),
+    cert: readFileSync("test/cert.pem")
+    requestCert: true,
+    ca: [
+        readFileSync("/client-cert.pem")
+    ]
+});
+
 const io = new Server(httpServer, {
 cors: {
-    origin: "http://cs275pokerserver.com"
+    origin: "https://cs275pokerserver.com"
 }
 });
 
@@ -32,6 +41,7 @@ cors: {
 
 io.on("connection", (socket) => {
     // how to add to players list
+    console.log("server is running");
     console.log(socket.id);
     
     // all socket.on things happen inside the connection so it only can try to do anything
@@ -43,19 +53,19 @@ io.on("connection", (socket) => {
     
     socket.on('NodeJS Server Port', function(data) {
         console.log(data);
-        io.sockets.emit('iOS Client Port', {msg: 'Hi iOS Client!'}});
+        io.sockets.emit('iOS Client Port', {msg: 'Hi iOS Client!'});
     });
     
     // test function for later after testing server its self
-    socket.on('Create Game', function(data) {
-        
-        //onlything needed in start game is the call to the function start game
-        round1 = new Round(data[0],data[2]);
-        round1.addPlayer(new Player(data[1], 100));
-        console.log(round1);
-        sendBackCreateSuccessful(socket.id, round1);
-        
-    });
+//    socket.on('Create Game', function(data) {
+//
+//        //onlything needed in start game is the call to the function start game
+//        round1 = new Round(data[0],data[2]);
+//        round1.addPlayer(new Player(data[1], 100));
+//        console.log(round1);
+//        sendBackCreateSuccessful(socket.id, round1);
+//
+//    });
     
 });
 
