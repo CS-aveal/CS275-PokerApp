@@ -599,11 +599,86 @@ io.sockets.on('connection', function(socket) {
         //this will now need to log the players turn and say it is the next persons turn
         //do this by
         
+        
         //need to pass in the round which will be created once create game was called so instance is already created
-        io.sockets.emit('Start Game', "");
+        //need to send to all of the clients all of the players names
+        //start game is going to send all of the information to be displayed on the client side
+        var gameInfo = new Array();
+        
+        for (let i = 0; i < r.allPlayers.length; i ++){
+            //add all of the users names to the array of gameInfo to be displayed on client side
+            gameInfo.push(r.allPlayers[i].name);
+        }
+        
+        
+        io.sockets.emit('Start Game', gameInfo);
         
     });
     
+    socket.on('Send Bet', function(data) {
+        //this will now need to log the players turn and say it is the next persons turn
+        //do this by
+        for (let i = 0; i < r.allPlayers.length; i ++){
+            if (r.allPlayers[i].socketID == socket.id){
+                //var choice = new Choice()
+                determineAction(Choice.raise, i, data[1]);
+            }
+        }
+        //need to pass in the round which will be created once create game was called so instance is already created
+        console.log(data[1]);
+        
+    });
+    
+    socket.on('Send Call', function(data) {
+        //this will now need to log the players turn and say it is the next persons turn
+        //do this by
+        for (let i = 0; i < r.allPlayers.length; i ++){
+            if (r.allPlayers[i].socketID == socket.id){
+                //var choice = new Choice()
+                //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
+                //possiby a global variable prevAct_ or something just to keep track in case they call
+                determineAction(Choice.call, i, data[1]);
+            }
+        }
+        
+        
+    });
+    
+    socket.on('Send Fold', function(data) {
+        //this will now need to log the players turn and say it is the next persons turn
+        //do this by
+        for (let i = 0; i < r.allPlayers.length; i ++){
+            //this is weird and not sure if I should keep it
+            //FIXFIXFIXFIXFIXFIXFIXFIXFIFXIFXIFXFIXFIXFIXFIXFIXFIXFIX
+            if (r.allPlayers[i].socketID == socket.id){
+                //var choice = new Choice()
+                //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
+                //possiby a global variable prevAct_ or something just to keep track in case they call
+                //not sure how heshi wants to handle this but I will ask
+                determineAction(Choice.fold, i, data[1]);
+            }
+        }
+        
+        
+    });
+    
+    socket.on('Send Check', function(data) {
+        //this will now need to log the players turn and say it is the next persons turn
+        //do this by
+        for (let i = 0; i < r.allPlayers.length; i ++){
+            //this is weird and not sure if I should keep it
+            //FIXFIXFIXFIXFIXFIXFIXFIXFIFXIFXIFXFIXFIXFIXFIXFIXFIXFIX
+            if (r.allPlayers[i].socketID == socket.id){
+                //var choice = new Choice()
+                //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
+                //possiby a global variable prevAct_ or something just to keep track in case they call
+                //not sure how heshi wants to handle this but I will ask
+                determineAction(Choice.check, i, data[1]);
+            }
+        }
+        
+        
+    });
     
 });
 
@@ -729,16 +804,16 @@ function getPlayerInput(inputChoices, playerIndex){
             io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
             break;
     }
-    r.allPlayers[playerIndex].
-    let input2 = 0;
-    console.log("Input for player with index %i: %s", playerIndex, r.allPlayers[playerIndex].name);
-    let input1 = prompt("enter action: ");
-    if (input1 == "raise"){
-        input2 = prompt("enter raise amount: ");
-    }
-    let pick;
+    //r.allPlayers[playerIndex].
+//    let input2 = 0;
+//    console.log("Input for player with index %i: %s", playerIndex, r.allPlayers[playerIndex].name);
+//    let input1 = prompt("enter action: ");
+//    if (input1 == "raise"){
+//        input2 = prompt("enter raise amount: ");
+//    }
+//    let pick;
     
-    //determineAction(pick, playerIndex, Number(input2)); this call will happen from input function
+    //determineAction(pick, playerIndex, Number(input2)); //this call will happen from input function
 }
 
 
@@ -776,6 +851,9 @@ function decrement(arr,i){
 //player = player index of player that just acted. -1 if dealer.
 //val = bet/call value associated with player action.
 function determineAction(prevAct, player, val){
+//    if (player == 0){
+//        player = r.currentPlayerIndex;
+//    }
     if(player >= 0){ //the last action was a player action
         //First, make update according to action taken
         if(prevAct == Choice.fold){

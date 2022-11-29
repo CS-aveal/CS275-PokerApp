@@ -61,6 +61,11 @@ final class Service: ObservableObject {
     @Published var isHost: Bool!
     @Published var noCheckscreen: Bool!
     @Published var noCallscreen: Bool!
+    @Published var raiseSlider: Bool!
+    @Published var player1Name: String!
+    @Published var player2Name: String!
+    @Published var player3Name: String!
+    @Published var player4Name: String!
     
     
     @Published var stringMessages = [String]()
@@ -78,6 +83,11 @@ final class Service: ObservableObject {
         self.isHost = false
         self.noCheckscreen = false
         self.noCallscreen = false
+        self.raiseSlider = false
+        self.player1Name = ""
+        self.player2Name = ""
+        self.player3Name = ""
+        self.player4Name = ""
         
         socket.on(clientEvent: .connect) { (data, ack) in
             print("Connected")
@@ -109,12 +119,6 @@ final class Service: ObservableObject {
             self?.changed = true
         }
         
-        socket.on("Start Game") { [weak self] (data, ack) in
-            //self.screens
-            self?.inGame = true
-            self?.waiting = false
-            
-        }
         socket.on("No Check Turn") { [weak self] (data, ack) in
             
             self?.noCheckscreen = true
@@ -124,6 +128,31 @@ final class Service: ObservableObject {
             
             self?.noCallscreen = true
             self?.inGame = false
+        }
+        
+        socket.on("Start Game") { [weak self] (data, ack) in
+            var counter = 1
+            if let data = data as? [String]{
+               for name_ in data{
+                   DispatchQueue.main.async {
+                       if (counter == 1){
+                           self?.player1Name = name_
+                       }
+                       else if (counter == 2){
+                           self?.player2Name = name_
+                       }
+                       else if (counter == 3){
+                           self?.player3Name = name_
+                       }
+                       else if (counter == 4){
+                           self?.player4Name = name_
+                       }
+                       counter += 1
+                   }
+               }
+            }
+            self?.inGame = true
+            self?.waiting = false
         }
     }
     
@@ -183,6 +212,38 @@ final class Service: ObservableObject {
         home = false
         createGame = true
     }
+    func sendBet(_ bet: Double){
+        
+        var turnInfo: [String] = []
+        let socket = manager.defaultSocket
+        socket.connect()
+        turnInfo.append("Bet")
+        turnInfo.append(String(bet))
+        
+        socket.emit("Send Bet", turnInfo)
+    }
+    func sendCall(){
+        
+        let socket = manager.defaultSocket
+        socket.connect()
+        
+        socket.emit("Send Call", "")
+    }
+    
+    func sendFold(){
+        
+        let socket = manager.defaultSocket
+        socket.connect()
+        
+        socket.emit("Send Fold", "")
+    }
+    func sendCheck(){
+        
+        let socket = manager.defaultSocket
+        socket.connect()
+        
+        socket.emit("Send Check", "")
+    }
     
 }
 
@@ -201,11 +262,6 @@ class Observables: ObservableObject {
 struct ContentView: View {
     
     
-    
-    
-    
-
-    
     @ObservedObject var service = Service()
     
     @State private var name: String = ""
@@ -218,16 +274,15 @@ struct ContentView: View {
     @State private var joinCode: String = ""
     
     
-    @State private var p1Name = "Player 1"
-    @State private var p2Name = "Player 2"
-    @State private var p3Name = "Player 3"
-    @State private var p4Name = "Player 4"
+    
     
     @State private var p1Chips = 0.00
     @State private var p2Chips = 0.00
     @State private var p3Chips = 0.00
     @State private var p4Chips = 0.00
     @State private var potVal = 0.00
+    
+    @State private var raiseVal = 0.00
     
     @State private var p1Card1 = "backOfCard"
     @State private var p1Card2 = "backOfCard"
@@ -333,7 +388,7 @@ struct ContentView: View {
                         Spacer()
                         
                         VStack { // Player 2
-                            Text("\(p2Name)")
+                            Text("\(service.player2Name)")
                                 .bold()
                             
                             
@@ -350,7 +405,7 @@ struct ContentView: View {
                         Spacer()
                         
                         VStack { // Player 3
-                            Text("\(p3Name)")
+                            Text("\(service.player3Name)")
                                 .bold()
                             
                             HStack{ // Two Cards
@@ -371,7 +426,7 @@ struct ContentView: View {
                     HStack { // Two Players and Pot Value
                         
                         VStack { // Player 1
-                            Text("\(p1Name)")
+                            Text("\(service.player1Name)")
                                 .bold()
                             
                             HStack{ // Two Cards
@@ -391,6 +446,8 @@ struct ContentView: View {
                         VStack { // 5 delt cards and pot value
                             
                             HStack{ // 5 delt cards
+                                
+                                //these will need to be service variables to be able to be changed
                                 Image("\(potCard5)")
                                 Image("\(potCard4)")
                                 Image("\(potCard3)")
@@ -410,7 +467,7 @@ struct ContentView: View {
                             
                             
                             
-                            Text("\(p4Name)")
+                            Text("\(service.player4Name)")
                                 .bold()
                             
                             HStack{ // Two Cards
@@ -432,35 +489,53 @@ struct ContentView: View {
                         Spacer()
                         
                         Button(action: {
-                            // Bet action
+                            // Raise action
+                            
+                            self.service.raiseSlider = true
+                            self.service.inGame = false
+                            
                         }, label: {
-                            Text("BET")
+                            Text("RAISE")
                                 .foregroundColor(Color.black)
                                 .padding(.leading, 70)
                         })
                         
-                        Spacer()
                         
-                        Button(action: {
-                            // Call action
-                        }, label: {
-                            Text("CALL")
-                                .foregroundColor(Color.black)
-                        })
+                        if service.noCallscreen == false {
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                // Call action
+                                service.sendCall()
+                            }, label: {
+                                Text("CALL")
+                                    .foregroundColor(Color.black)
+                            })
+                            
+                        }
                         
-                        Spacer()
                         
-                        Button(action: {
-                            // Check action
-                        }, label: {
-                            Text("CHECK")
-                                .foregroundColor(Color.black)
-                        })
+                        if service.noCheckscreen == false {
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                // Check action
+                                service.sendCheck()
+                            }, label: {
+                                Text("CHECK")
+                                    .foregroundColor(Color.black)
+                            })
+                            
+                            
+                        }
                         
                         Spacer()
                         
                         Button(action: {
                             // Fold action
+                            service.sendFold()
                         }, label: {
                             Text("FOLD")
                                 .foregroundColor(Color.black)
@@ -477,6 +552,47 @@ struct ContentView: View {
                 
             }
         }
+        if service.raiseSlider == true {
+            
+            ZStack{
+                
+                Color.green
+                    .ignoresSafeArea()
+                
+                VStack{
+                    
+                    Spacer()
+                    
+                    Slider(value: $raiseVal, in: 0.00...100.00)
+                        .frame(width: 300)
+                    
+                    Text("Selected raise amount: \(raiseVal, specifier: "%.2f")")
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    
+                    Spacer()
+                    
+
+                    Button(action: {
+                        
+                        self.service.inGame = true
+                        self.service.raiseSlider = false
+                        service.sendBet(raiseVal)
+                        
+                        
+                    }, label: {
+                        Text("SUBMIT RAISE")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    })
+                    
+                    Spacer()
+                    
+                }
+                
+            }
+            
+        }
+        
+        
         if service.createGame == true {
             ZStack {
                 
