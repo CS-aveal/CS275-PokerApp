@@ -30,6 +30,7 @@ class DiffScreens: ObservableObject {
     @Published var waiting: Bool!
     @Published var inGame: Bool!
     @Published var isHost: Bool!
+    @Published var raiseSlider: Bool!
     
     
     
@@ -41,6 +42,7 @@ class DiffScreens: ObservableObject {
         self.waiting = false
         self.inGame = false
         self.isHost = false
+        self.raiseSlider = false
         
     }
     
@@ -61,6 +63,7 @@ final class Service: ObservableObject {
     @Published var isHost: Bool!
     @Published var noCheckscreen: Bool!
     @Published var noCallscreen: Bool!
+    @Published var raiseSlider: Bool!
     
     
     @Published var stringMessages = [String]()
@@ -78,6 +81,7 @@ final class Service: ObservableObject {
         self.isHost = false
         self.noCheckscreen = false
         self.noCallscreen = false
+        self.raiseSlider = false
         
         socket.on(clientEvent: .connect) { (data, ack) in
             print("Connected")
@@ -201,11 +205,6 @@ class Observables: ObservableObject {
 struct ContentView: View {
     
     
-    
-    
-    
-
-    
     @ObservedObject var service = Service()
     
     @State private var name: String = ""
@@ -228,6 +227,8 @@ struct ContentView: View {
     @State private var p3Chips = 0.00
     @State private var p4Chips = 0.00
     @State private var potVal = 0.00
+    
+    @State private var raiseVal = 0.00
     
     @State private var p1Card1 = "backOfCard"
     @State private var p1Card2 = "backOfCard"
@@ -432,30 +433,45 @@ struct ContentView: View {
                         Spacer()
                         
                         Button(action: {
-                            // Bet action
+                            // Raise action
+                            
+                            self.service.raiseSlider = true
+                            self.service.inGame = false
+                            
                         }, label: {
-                            Text("BET")
+                            Text("RAISE")
                                 .foregroundColor(Color.black)
                                 .padding(.leading, 70)
                         })
                         
-                        Spacer()
                         
-                        Button(action: {
-                            // Call action
-                        }, label: {
-                            Text("CALL")
-                                .foregroundColor(Color.black)
-                        })
+                        if service.noCallscreen == false {
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                // Call action
+                            }, label: {
+                                Text("CALL")
+                                    .foregroundColor(Color.black)
+                            })
+                            
+                        }
                         
-                        Spacer()
                         
-                        Button(action: {
-                            // Check action
-                        }, label: {
-                            Text("CHECK")
-                                .foregroundColor(Color.black)
-                        })
+                        if service.noCheckscreen == false {
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                // Check action
+                            }, label: {
+                                Text("CHECK")
+                                    .foregroundColor(Color.black)
+                            })
+                            
+                            
+                        }
                         
                         Spacer()
                         
@@ -477,6 +493,46 @@ struct ContentView: View {
                 
             }
         }
+        if service.raiseSlider == true {
+            
+            ZStack{
+                
+                Color.green
+                    .ignoresSafeArea()
+                
+                VStack{
+                    
+                    Spacer()
+                    
+                    Slider(value: $raiseVal, in: 0.00...100.00)
+                        .frame(width: 300)
+                    
+                    Text("Selected raise amount: \(raiseVal, specifier: "%.2f")")
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    
+                    Spacer()
+                    
+
+                    Button(action: {
+                        
+                        self.service.inGame = true
+                        self.service.raiseSlider = false
+                        
+                        
+                    }, label: {
+                        Text("SUBMIT RAISE")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+                    })
+                    
+                    Spacer()
+                    
+                }
+                
+            }
+            
+        }
+        
+        
         if service.createGame == true {
             ZStack {
                 
