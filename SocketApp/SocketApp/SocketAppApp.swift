@@ -13,6 +13,7 @@ struct SocketAppApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(DiffScreens())
+                .environmentObject(Observables())
                 
         }
     }

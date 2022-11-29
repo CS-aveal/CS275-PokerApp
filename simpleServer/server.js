@@ -429,7 +429,8 @@ const Choice = {
 }
 
 class Player{
-    constructor(name,stack){
+    constructor(name,stack, socketID){
+        this.socketID = socketID;
         this.name = name;
         this.stack = stack;
         this.privateHand = [];
@@ -498,6 +499,8 @@ gameIdCounter = 0
 
 maxPlayerCount = 4
 
+let r;
+
 gameList = [];
 
 //need this to just be an attribute of game because there could be multiple games going on
@@ -548,8 +551,9 @@ io.sockets.on('connection', function(socket) {
         
         
         round1 = new Round(data[0],data[2]);
-        round1.addPlayer(new Player(data[1], 100));
+        round1.addPlayer(new Player(data[1], 100, socket.id));
         gameList.push(round1);
+        r = gameList[0];
         console.log("HERE");
         console.log(round1);
         sendBackCreateSuccessful(socket.id, round1);
@@ -558,6 +562,9 @@ io.sockets.on('connection', function(socket) {
     socket.on('Join Game', function(data) {
         
         //onlything needed in start game is the call to the function start game
+        
+        round1 = new Round(100,100);
+        //gameList.push(round1);
         
         for (let i = 0; i < gameList.length; i++){
             if (gameList[i].ID == data[0]){
@@ -570,30 +577,31 @@ io.sockets.on('connection', function(socket) {
             }
         }
         
+        
         for (let i = 0; i < gameList.length; i++){
             if (gameList[i].ID == data[0]){
                 //add player into the game
                 gameList[i].addPlayer(new Player(data[1], 100));
+                console.log(gameList[i]);
             }
         }
         
         //join game was successful
-        console.log(round1);
-        sendBackJoinSuccessful(socket.id, round1);
+        //console.log(round1);
+        //sendBackJoinSuccessful(socket.id, round1);
         
     });
     
     
     
     
-    socket.on('Start Round', function(data) {
+    socket.on('Start Game', function(data) {
         //this will now need to log the players turn and say it is the next persons turn
         //do this by
         
         //need to pass in the round which will be created once create game was called so instance is already created
+        io.sockets.emit('Start Game', "");
         
-        let round1 = new Round();
-        gameList.push(round1);
     });
     
     
@@ -713,11 +721,15 @@ function getPlayerInput(inputChoices, playerIndex){
     switch(inputChoices){
             case Options.noCheck:
             console.log("player cannot check")
+            //send the no check option to the player index because it is their turn
+            io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", "");
             break;
             case Options.noCall:
             console.log("player cannot call")
+            io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
             break;
     }
+    r.allPlayers[playerIndex].
     let input2 = 0;
     console.log("Input for player with index %i: %s", playerIndex, r.allPlayers[playerIndex].name);
     let input1 = prompt("enter action: ");
@@ -899,11 +911,11 @@ function playerTurn(player) {
   return p1 * p2;
 }
 
-function startGame(r){
+function startGame(){
     console.log("Starting Game")
     r.state = State.preflop;
     r.playersIn[0].setDealer();
-    doDealerAction(r, DealerAction.dealPlayers)
+    doDealerAction(DealerAction.dealPlayers);
 }
 
 function getPlayerInputSwift(socketID) {
