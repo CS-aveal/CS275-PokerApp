@@ -9,6 +9,7 @@ const httpServer = createServer({
     ca: [
         // figure out key stuff still / talk to jason about easier method to doing it
         // https://www.golinuxcloud.com/openssl-create-client-server-certificate/
+        // https://github.com/socketio/socket.io-client/issues/551 (potential bug that might show up later)
         readFileSync("/client-cert.pem")
     ]
 });
