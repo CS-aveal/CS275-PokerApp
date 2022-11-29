@@ -7,6 +7,8 @@ const httpServer = createServer({
     cert: readFileSync("test/cert.pem")
     requestCert: true,
     ca: [
+        // figure out key stuff still / talk to jason about easier method to doing it
+        // https://www.golinuxcloud.com/openssl-create-client-server-certificate/
         readFileSync("/client-cert.pem")
     ]
 });

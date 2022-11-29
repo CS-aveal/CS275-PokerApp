@@ -48,7 +48,6 @@ final class Service: ObservableObject {
     private var manager = SocketManager(socketURL: URL(string: "http://cs275pokerserver.com/")!, config: [.log(true), .compress])
     
     
-    
     @Published var stringMessages = [String]()
     @Published var changed: Bool!
     
