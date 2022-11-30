@@ -426,7 +426,6 @@ const DealerAction = {
 const Options = {
     noCheck: 0,
     noCall: 1,
-    //allInNoOptions?
 }
 const Choice = {
     fold: 0,
@@ -912,19 +911,37 @@ function doDealerAction(act){
 
 //everything done needs to be outputted to the UI via a handler, so we'll need a handler for everything like removing the player after they fold, dealing cards,changing pots, and any other changes that need to be observed in the UI. For now, all those actions are done directly, but we'll need to add calls to the handlers so that the UI gets updated too.
 
-function getPlayerInput(inputChoices, playerIndex, minRaiseAmt){
-    
-        switch(inputChoices){
-                case Options.noCheck:
-                console.log("player cannot check")
-                //send the no check option to the player index because it is their turn
-                io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", "");
-                break;
-                case Options.noCall:
-                console.log("player cannot call")
-                io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
-                break;
-        }
+function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, callAmt){
+    let raiseSet = false;
+    if (maxRaiseAmt < minRaiseAmt){
+        raiseSet = true;
+        //use maxRaiseAmt as only raise option (no slider)
+    }
+    switch(inputChoices){
+            case Options.noCheck:
+            console.log("player cannot check")
+            //check if player is covered
+            if(r.allPlayers[playerIndex].stack <= callAmt){
+                //Only fold and call options available
+                console.log("player is covered")
+            } else {
+                //else, fold, call, and raise options available.
+                console.log("player is not covered")
+                if(raiseSet){
+                    //if a player wants to raise, he must raise whole stack because min raise > stack
+                } else {
+                    //raise button generates slider from minRaiseAmt to maxRaiseAmt
+                    //send the no check option to the player index because it is their turn
+                    io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", "");
+                }
+            }
+            
+            break;
+            case Options.noCall:
+            console.log("player cannot call")
+            io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
+            break;
+    }
     
     //r.allPlayers[playerIndex].
 //    let input2 = 0;
@@ -1057,7 +1074,7 @@ function determineAction(prevAct, player, val){
                 opt = Options.noCheck;
             }
             //GET RID OF LAST ARGUMENT, USE r.currentPlayerIndex INSIDE GETINPUT FUNCTION
-            getPlayerInput(opt, r.currentPlayerIndex, r.highestBet);
+            getPlayerInput(opt, r.currentPlayerIndex, r.highestBet, r.allPlayers[r.currentPlayerIndex].stack - (r.highestBet-r.allPlayers[r.currentPlayerIndex].totalBet),r.highestBet - r.allPlayers[r.currentPlayerIndex].totalBet );
         }
     }
     else if(player == -1){//dealer action just happened
@@ -1089,14 +1106,14 @@ function determineAction(prevAct, player, val){
             r.highestBet += smallBlind*2;
             
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
-            getPlayerInput(Options.noCheck, r.currentPlayerIndex, r.highestBet);
+            getPlayerInput(Options.noCheck, r.currentPlayerIndex, r.highestBet, r.allPlayers[r.currentPlayerIndex].stack - (r.highestBet-r.allPlayers[r.currentPlayerIndex].totalBet), r.highestBet - r.allPlayers[r.currentPlayerIndex].totalBet);
 
         }
         else if(prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
             //time for another betting round.
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
             //call input function with players options
-            getPlayerInput(Options.noCall, r.currentPlayerIndex, r.highestBet);
+            getPlayerInput(Options.noCall, r.currentPlayerIndex, r.highestBet, r.allPlayers[r.currentPlayerIndex].stack - (r.highestBet-r.allPlayers[r.currentPlayerIndex].totalBet), r.highestBet - r.allPlayers[r.currentPlayerIndex].totalBet);
         }
         else if(prevAct == DealerAction.endRound){
             console.log("Starting another round")
