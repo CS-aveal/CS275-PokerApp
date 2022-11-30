@@ -912,7 +912,7 @@ function doDealerAction(act){
 
 //everything done needs to be outputted to the UI via a handler, so we'll need a handler for everything like removing the player after they fold, dealing cards,changing pots, and any other changes that need to be observed in the UI. For now, all those actions are done directly, but we'll need to add calls to the handlers so that the UI gets updated too.
 
-function getPlayerInput(inputChoices, playerIndex){
+function getPlayerInput(inputChoices, playerIndex, minRaiseAmt){
     
         switch(inputChoices){
                 case Options.noCheck:
@@ -1057,7 +1057,7 @@ function determineAction(prevAct, player, val){
                 opt = Options.noCheck;
             }
             //GET RID OF LAST ARGUMENT, USE r.currentPlayerIndex INSIDE GETINPUT FUNCTION
-            getPlayerInput(opt, r.currentPlayerIndex);
+            getPlayerInput(opt, r.currentPlayerIndex, r.highestBet);
         }
     }
     else if(player == -1){//dealer action just happened
@@ -1089,14 +1089,14 @@ function determineAction(prevAct, player, val){
             r.highestBet += smallBlind*2;
             
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
-            getPlayerInput(Options.noCheck, r.currentPlayerIndex);
+            getPlayerInput(Options.noCheck, r.currentPlayerIndex, r.highestBet);
 
         }
         else if(prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
             //time for another betting round.
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
             //call input function with players options
-            getPlayerInput(Options.noCall, r.currentPlayerIndex);
+            getPlayerInput(Options.noCall, r.currentPlayerIndex, r.highestBet);
         }
         else if(prevAct == DealerAction.endRound){
             console.log("Starting another round")
