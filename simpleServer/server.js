@@ -18,7 +18,7 @@ const Suit = {
     heart: 3
 }
 
-
+roundOne = false
 
 const Rank = {
     highCard: 0,
@@ -36,6 +36,13 @@ class Card{
     constructor(num,suit){
         this.number = num;
         this.suit = suit;
+    }
+    getID(){
+
+        let letter = this.suit.toString().charAt(0);
+
+        return this.number.toString()+letter.toUpperCase();
+
     }
 }
 
@@ -598,21 +605,66 @@ io.sockets.on('connection', function(socket) {
     socket.on('Start Game', function(data) {
         //this will now need to log the players turn and say it is the next persons turn
         //do this by
-        
-        
+
+
+
         //need to pass in the round which will be created once create game was called so instance is already created
         //need to send to all of the clients all of the players names
         //start game is going to send all of the information to be displayed on the client side
-        var gameInfo = new Array();
-        
-        for (let i = 0; i < r.allPlayers.length; i ++){
-            //add all of the users names to the array of gameInfo to be displayed on client side
-            gameInfo.push(r.allPlayers[i].name);
+        var gameInfo = {};
+
+        console.log(r.allPlayers[0].privateHand[0]);
+
+
+        if (r.allPlayers.length == 1){
+            gameInfo["Player1"] = r.allPlayers[0].name;
+            //will need to send the cards of each player and the pot over
+            
+
+
         }
+        else if (r.allPlayers.length == 2){
+            gameInfo["Player1"] = r.allPlayers[0].name;
+
+
+            gameInfo["Player2"] = r.allPlayers[1].name;
+
+            
+        }
+        else if (r.allPlayers.length == 3){
+            gameInfo["Player1"] = r.allPlayers[0].name;
+
+
+
+            gameInfo["Player2"] = r.allPlayers[1].name;
+
+
+            gameInfo["Player3"] = r.allPlayers[2].name;
+
+
+        }
+        else if (r.allPlayers.length == 4){
+            gameInfo["Player1"] = r.allPlayers[0].name;
+
+
+            gameInfo["Player2"] = r.allPlayers[1].name;
+
+
+            gameInfo["Player3"] = r.allPlayers[2].name;
+
+
+
+            gameInfo["Player4"] = r.allPlayers[3].name;
+
+
+        }
+
         
-        
+
         io.sockets.emit('Start Game', gameInfo);
         
+        startGame();
+
     });
     
     socket.on('Send Bet', function(data) {
@@ -637,7 +689,7 @@ io.sockets.on('connection', function(socket) {
                 //var choice = new Choice()
                 //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
                 //possiby a global variable prevAct_ or something just to keep track in case they call
-                determineAction(Choice.call, i, data[1]);
+                determineAction(Choice.call, i, 0);
             }
         }
         
@@ -655,7 +707,7 @@ io.sockets.on('connection', function(socket) {
                 //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
                 //possiby a global variable prevAct_ or something just to keep track in case they call
                 //not sure how heshi wants to handle this but I will ask
-                determineAction(Choice.fold, i, data[1]);
+                determineAction(Choice.fold, i, 0);
             }
         }
         
@@ -663,7 +715,7 @@ io.sockets.on('connection', function(socket) {
     });
     
     socket.on('Send Check', function(data) {
-        //this will now need to log the players turn and say it is the next persons turn
+        //this will now need to log the players turn by sending the info to determineAction
         //do this by
         for (let i = 0; i < r.allPlayers.length; i ++){
             //this is weird and not sure if I should keep it
@@ -673,7 +725,7 @@ io.sockets.on('connection', function(socket) {
                 //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
                 //possiby a global variable prevAct_ or something just to keep track in case they call
                 //not sure how heshi wants to handle this but I will ask
-                determineAction(Choice.check, i, data[1]);
+                determineAction(Choice.check, i, 0);
             }
         }
         
@@ -730,6 +782,69 @@ function doDealerAction(act){
                 }
                 r.allPlayers[c].dealPrivateHand(r.deck);
                 console.log(r.allPlayers[c].privateHand);
+                
+                gameInfo = {};
+                if (r.allPlayers.length == 1){
+                    gameInfo["Player1"] = r.allPlayers[0].name;
+                    //will need to send the cards of each player and the pot over
+                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID()
+                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID()
+                    
+                    
+                
+                
+                }
+                else if (r.allPlayers.length == 2){
+                    
+                
+                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
+                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
+                
+                    
+                
+                    gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
+                    gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
+                }
+                else if (r.allPlayers.length == 3){
+                    
+                
+                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
+                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
+                
+                    
+                
+                    gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
+                    gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
+                
+                    
+                
+                    gameInfo["Player3 Card1"] = r.allPlayers[2].privateHand[0].getID();
+                    gameInfo["Player3 Card2"] = r.allPlayers[2].privateHand[1].getID();
+                
+                }
+                else if (r.allPlayers.length == 4){
+                    
+                
+                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
+                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
+                
+                    
+                
+                    gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
+                    gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
+                
+                    
+                
+                    gameInfo["Player3 Card1"] = r.allPlayers[2].privateHand[0].getID();
+                    gameInfo["Player3 Card2"] = r.allPlayers[2].privateHand[1].getID();
+                
+                    
+                
+                    gameInfo["Player4 Card1"] = r.allPlayers[3].privateHand[0].getID();
+                    gameInfo["Player4 Card2"] = r.allPlayers[3].privateHand[1].getID();
+                
+                        }
+                io.sockets.emit("Display UserCard Info", gameInfo);
             }
             break;
             case DealerAction.dealFlop:
@@ -737,6 +852,11 @@ function doDealerAction(act){
             r.commonCards.push(r.deck.popTop());
             r.commonCards.push(r.deck.popTop());
             r.commonCards.push(r.deck.popTop());
+            gameInfo = {};
+            gameInfo["Pot Card1"] = r.commonCards[0].getID();
+            gameInfo["Pot Card2"] = r.commonCards[1].getID();
+            gameInfo["Pot Card3"] = r.commonCards[2].getID();
+            io.sockets.emit("Display PotCard Info", gameInfo);
             console.log("Common cards: ")
             console.log(r.commonCards);
             break;
@@ -793,17 +913,19 @@ function doDealerAction(act){
 //everything done needs to be outputted to the UI via a handler, so we'll need a handler for everything like removing the player after they fold, dealing cards,changing pots, and any other changes that need to be observed in the UI. For now, all those actions are done directly, but we'll need to add calls to the handlers so that the UI gets updated too.
 
 function getPlayerInput(inputChoices, playerIndex){
-    switch(inputChoices){
-            case Options.noCheck:
-            console.log("player cannot check")
-            //send the no check option to the player index because it is their turn
-            io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", "");
-            break;
-            case Options.noCall:
-            console.log("player cannot call")
-            io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
-            break;
-    }
+    
+        switch(inputChoices){
+                case Options.noCheck:
+                console.log("player cannot check")
+                //send the no check option to the player index because it is their turn
+                io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", "");
+                break;
+                case Options.noCall:
+                console.log("player cannot call")
+                io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
+                break;
+        }
+    
     //r.allPlayers[playerIndex].
 //    let input2 = 0;
 //    console.log("Input for player with index %i: %s", playerIndex, r.allPlayers[playerIndex].name);
@@ -1010,4 +1132,8 @@ function sendBackJoinGameUnsuccessful(socketID, round){
 
 function sendBackCreateSuccessful(socketID, round){
     io.to(socketID).emit("Create Success", round.id);
+}
+
+function sendTest(){
+    io.sockets.emit("Test Success", "");
 }

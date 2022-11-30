@@ -59,6 +59,7 @@ final class Service: ObservableObject {
     @Published var waiting: Bool!
     @Published var inGame: Bool!
     @Published var isHost: Bool!
+    @Published var changed1: Bool!
     @Published var noCheckscreen: Bool!
     @Published var noCallscreen: Bool!
     @Published var raiseSlider: Bool!
@@ -66,6 +67,24 @@ final class Service: ObservableObject {
     @Published var player2Name: String!
     @Published var player3Name: String!
     @Published var player4Name: String!
+    @Published var p1Card1 = ""
+    @Published var p1Card2 = ""
+    
+    @Published var p2Card1 = ""
+    @Published var p2Card2 = ""
+    
+    @Published var p3Card1 = ""
+    @Published var p3Card2 = ""
+    
+    @Published var p4Card1 = ""
+    @Published var p4Card2 = ""
+    
+    
+    @Published var potCard1 = ""
+    @Published var potCard2 = ""
+    @Published var potCard3 = ""
+    @Published var potCard4 = ""
+    @Published var potCard5 = ""
     
     
     @Published var stringMessages = [String]()
@@ -74,6 +93,7 @@ final class Service: ObservableObject {
     init() {
         let socket = manager.defaultSocket
         self.changed = false
+        self.changed1 = false
         
         self.home = true
         self.createGame = false
@@ -122,38 +142,215 @@ final class Service: ObservableObject {
         socket.on("No Check Turn") { [weak self] (data, ack) in
             
             self?.noCheckscreen = true
-            self?.inGame = false
+            //self?.inGame = false
         }
-        socket.on("No Check Turn") { [weak self] (data, ack) in
+        socket.on("No Call Turn") { [weak self] (data, ack) in
             
             self?.noCallscreen = true
-            self?.inGame = false
+            //self?.inGame = false
+        }
+        
+        socket.on("Display UserCard Info") { [weak self] (data, ack) in
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: String]{
+                    self?.changed1 = true
+                    if let rawMessage = data["Player1 Card1"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Player1 Card2"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Player2 Card1"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Player2 Card2"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Player3 Card1"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Player3 Card2"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Player4 Card1"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Player4 Card2"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.p1Card1 = rawMessage
+                            
+                        }
+                    }
+                }
+            }
+            
+        }
+        
+        socket.on("Display PotCard Info") { [weak self] (data, ack) in
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: String]{
+                    self?.changed1 = true
+                    if let rawMessage = data["Pot Card1"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.potCard1 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Pot Card2"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.potCard2 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Pot Card3"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.potCard3 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Pot Card4"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.potCard4 = rawMessage
+                            
+                        }
+                    }
+                    else if let rawMessage = data["Pot Card5"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.potCard5 = rawMessage
+                            
+                        }
+                    }
+                }
+            }
+            
         }
         
         socket.on("Start Game") { [weak self] (data, ack) in
-            var counter = 1
-            if let data = data as? [String]{
-               for name_ in data{
-                   DispatchQueue.main.async {
-                       if (counter == 1){
-                           self?.player1Name = name_
-                       }
-                       else if (counter == 2){
-                           self?.player2Name = name_
-                       }
-                       else if (counter == 3){
-                           self?.player3Name = name_
-                       }
-                       else if (counter == 4){
-                           self?.player4Name = name_
-                       }
-                       counter += 1
-                   }
-               }
-            }
+//            for x in 0...(data.count - 1){
+//                if let data = data[x] as? [String: String]{
+//                    self?.changed1 = true
+//                    if let rawMessage = data["Player1"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.player1Name = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player1 Card1"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player1 Card2"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player2"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.player2Name = rawMessage
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player2 Card1"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player2 Card2"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player3"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.player3Name = rawMessage
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player3 Card1"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player3 Card2"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player4"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.player4Name = rawMessage
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player4 Card1"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                    else if let rawMessage = data["Player4 Card2"]{
+//                        DispatchQueue.main.async {
+//                            //self?.errorMessages.append(rawMessage)
+//                            self?.p1Card1 = rawMessage
+//
+//                        }
+//                    }
+//                }
+//            }
             self?.inGame = true
             self?.waiting = false
+            
         }
+        
     }
     
     func sendCreateGame(_ code: Int,_ name: String, _ stake: String){
@@ -273,7 +470,14 @@ struct ContentView: View {
     @State private var joinName: String = ""
     @State private var joinCode: String = ""
     
-    
+    @State private var p1Card1 = "backOfCard"
+    @State private var p1Card2 = "backOfCard"
+    @State private var p2Card1 = "backOfCard"
+    @State private var p2Card2 = "backOfCard"
+    @State private var p3Card1 = "backOfCard"
+    @State private var p3Card2 = "backOfCard"
+    @State private var p4Card1 = "backOfCard"
+    @State private var p4Card2 = "backOfCard"
     
     
     @State private var p1Chips = 0.00
@@ -284,17 +488,7 @@ struct ContentView: View {
     
     @State private var raiseVal = 0.00
     
-    @State private var p1Card1 = "backOfCard"
-    @State private var p1Card2 = "backOfCard"
     
-    @State private var p2Card1 = "backOfCard"
-    @State private var p2Card2 = "backOfCard"
-    
-    @State private var p3Card1 = "backOfCard"
-    @State private var p3Card2 = "backOfCard"
-    
-    @State private var p4Card1 = "backOfCard"
-    @State private var p4Card2 = "backOfCard"
     
     @State private var potCard1 = "backOfCard"
     @State private var potCard2 = "backOfCard"
@@ -373,6 +567,7 @@ struct ContentView: View {
             
         }
         if service.inGame == true {
+            Text("INGAME")
             ZStack{ // ZStack for background
                 
                 Image("backgroundpoker")
