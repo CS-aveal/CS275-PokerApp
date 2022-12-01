@@ -426,7 +426,6 @@ const DealerAction = {
 const Options = {
     noCheck: 0,
     noCall: 1,
-    //allInNoOptions?
 }
 const Choice = {
     fold: 0,
@@ -947,6 +946,7 @@ function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, cal
             //check if player is covered
             if(r.allPlayers[playerIndex].stack <= callAmt){
                 //Only fold and call options available
+<<<<<<< HEAD
                 dic = {};
                 dic["Call Amount"] = callAmt;
                 
@@ -977,6 +977,18 @@ function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, cal
                     console.log(playerIndex);
                     
                     console.log("Last");
+=======
+                console.log("player is covered")
+            } else {
+                //else, fold, call, and raise options available.
+                console.log("player is not covered")
+                if(raiseSet){
+                    //if a player wants to raise, he must raise whole stack because min raise > stack
+                } else {
+                    //raise button generates slider from minRaiseAmt to maxRaiseAmt
+                    //send the no check option to the player index because it is their turn
+                    io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", "");
+>>>>>>> 985faca860ebad4eea776a339e095996de896f97
                 }
             }
             
