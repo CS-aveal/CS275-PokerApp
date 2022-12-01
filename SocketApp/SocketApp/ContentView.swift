@@ -54,19 +54,31 @@ final class Service: ObservableObject {
     
     
     @Published var home: Bool!
+    @Published var playerTurn: Bool!
     @Published var createGame: Bool!
     @Published var joinGame: Bool!
     @Published var waiting: Bool!
     @Published var inGame: Bool!
     @Published var isHost: Bool!
     @Published var changed1: Bool!
-    @Published var noCheckscreen: Bool!
-    @Published var noCallscreen: Bool!
+    @Published var CheckScreen: Bool!
+    @Published var CallScreen: Bool!
+    @Published var RaiseScreen: Bool!
     @Published var raiseSlider: Bool!
+    @Published var foldCallRaise: Bool!
+    @Published var foldCall: Bool!
     @Published var player1Name: String!
     @Published var player2Name: String!
     @Published var player3Name: String!
     @Published var player4Name: String!
+    @Published var minRaise: Double!
+    @Published var maxRaise: Double!
+    @Published var callAmount: Int!
+    @Published var player1Stack: Int!
+    @Published var player2Stack: Int!
+    @Published var player3Stack: Int!
+    @Published var player4Stack: Int!
+    @Published var potVal: Int!
     @Published var p1Card1 = ""
     @Published var p1Card2 = ""
     
@@ -101,9 +113,18 @@ final class Service: ObservableObject {
         self.waiting = false
         self.inGame = false
         self.isHost = false
-        self.noCheckscreen = false
-        self.noCallscreen = false
+        self.CheckScreen = false
+        self.CallScreen = false
+        self.RaiseScreen = false
         self.raiseSlider = false
+        self.foldCallRaise = false
+        self.playerTurn = false
+        self.player1Stack = 0
+        self.player2Stack = 0
+        self.player3Stack = 0
+        self.player4Stack = 0
+        self.potVal = 0
+        self.callAmount = 0
         self.player1Name = ""
         self.player2Name = ""
         self.player3Name = ""
@@ -140,14 +161,125 @@ final class Service: ObservableObject {
         }
         
         socket.on("No Check Turn") { [weak self] (data, ack) in
-            
-            self?.noCheckscreen = true
+            self?.playerTurn = true
+            self?.CallScreen = true
+            self?.RaiseScreen = true
             //self?.inGame = false
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: Int]{
+                    
+                    if let rawMessage = data["Min Raise Amount"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.minRaise = Double(rawMessage)
+                            
+                        }
+                    }
+                    if let rawMessage = data["Max Raise Amount"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.maxRaise = Double(rawMessage)
+                            
+                        }
+                    }
+                    if let rawMessage = data["Call Amount"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.callAmount = rawMessage
+                            
+                        }
+                    }
+                    
+                }
+            }
         }
         socket.on("No Call Turn") { [weak self] (data, ack) in
-            
-            self?.noCallscreen = true
+            self?.playerTurn = true
+            self?.CheckScreen = true
+            self?.RaiseScreen = true
             //self?.inGame = false
+        }
+        
+        
+        socket.on("Fold Call Raise Turn") { [weak self] (data, ack) in
+            self?.CheckScreen = true
+            self?.playerTurn = true
+            self?.RaiseScreen = true
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: Int]{
+                    
+                    if let rawMessage = data["Raise Amount"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.minRaise = Double(rawMessage)
+                            self?.maxRaise = Double(rawMessage)
+                            
+                        }
+                    }
+                }
+            }
+            
+        }
+        socket.on("Update Pot Val") { [weak self] (data, ack) in
+            if let data = data[0] as? Int{
+                DispatchQueue.main.async {
+                        //self?.errorMessages.append(rawMessage)
+                    self?.potVal = data
+                        
+                }
+            }
+        }
+        socket.on("Update Player Stack") { [weak self] (data, ack) in
+            var playerIndex = 0;
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: Int]{
+                    if let rawMessage = data["Player Index"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            playerIndex = rawMessage
+                            
+                        }
+                    }
+                    if let rawMessage = data["Player Stack"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            if (playerIndex == 0){
+                                self?.player1Stack = rawMessage
+                            }
+                            else if (playerIndex == 1){
+                                self?.player2Stack = rawMessage
+                            }
+                            else if (playerIndex == 2){
+                                self?.player3Stack = rawMessage
+                            }
+                            else if (playerIndex == 3){
+                                self?.player4Stack = rawMessage
+                            }
+                            
+                            
+                        }
+                    }
+                }
+            }
+        }
+            
+        
+        socket.on("Fold Call Turn") { [weak self] (data, ack) in
+            self?.playerTurn = true
+            self?.CallScreen = true
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: Int]{
+                    
+                    if let rawMessage = data["Call Amount"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.callAmount = rawMessage
+                            
+                        }
+                    }
+                }
+            }
+            
         }
         
         socket.on("Display UserCard Info") { [weak self] (data, ack) in
@@ -161,49 +293,49 @@ final class Service: ObservableObject {
                             
                         }
                     }
-                    else if let rawMessage = data["Player1 Card2"]{
+                    if let rawMessage = data["Player1 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Player2 Card1"]{
+                    if let rawMessage = data["Player2 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Player2 Card2"]{
+                    if let rawMessage = data["Player2 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Player3 Card1"]{
+                    if let rawMessage = data["Player3 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Player3 Card2"]{
+                    if let rawMessage = data["Player3 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Player4 Card1"]{
+                    if let rawMessage = data["Player4 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Player4 Card2"]{
+                    if let rawMessage = data["Player4 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
@@ -226,28 +358,28 @@ final class Service: ObservableObject {
                             
                         }
                     }
-                    else if let rawMessage = data["Pot Card2"]{
+                    if let rawMessage = data["Pot Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.potCard2 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Pot Card3"]{
+                    if let rawMessage = data["Pot Card3"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.potCard3 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Pot Card4"]{
+                    if let rawMessage = data["Pot Card4"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.potCard4 = rawMessage
                             
                         }
                     }
-                    else if let rawMessage = data["Pot Card5"]{
+                    if let rawMessage = data["Pot Card5"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.potCard5 = rawMessage
@@ -260,92 +392,67 @@ final class Service: ObservableObject {
         }
         
         socket.on("Start Game") { [weak self] (data, ack) in
-//            for x in 0...(data.count - 1){
-//                if let data = data[x] as? [String: String]{
-//                    self?.changed1 = true
-//                    if let rawMessage = data["Player1"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.player1Name = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player1 Card1"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player1 Card2"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player2"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.player2Name = rawMessage
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player2 Card1"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player2 Card2"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player3"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.player3Name = rawMessage
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player3 Card1"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player3 Card2"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player4"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.player4Name = rawMessage
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player4 Card1"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                    else if let rawMessage = data["Player4 Card2"]{
-//                        DispatchQueue.main.async {
-//                            //self?.errorMessages.append(rawMessage)
-//                            self?.p1Card1 = rawMessage
-//
-//                        }
-//                    }
-//                }
-//            }
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: String]{
+                    self?.changed1 = true
+                    if let rawMessage = data["Player1"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.player1Name = rawMessage
+
+                        }
+                    }
+                    if let rawMessage = data["Player2"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            //self?.player2Name = rawMessage
+                            self?.player2Name = rawMessage
+                        }
+                    }
+                    if let rawMessage = data["Player3"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.player3Name = rawMessage
+                        }
+                    }
+                    if let rawMessage = data["Player4"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.player4Name = rawMessage
+                        }
+                    
+                    }
+                    
+                    if let rawMessage = data["Player1 Stack"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.player1Stack = Int(rawMessage)
+                        }
+
+                    }
+                    if let rawMessage = data["Player2 Stack"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.player2Stack = Int(rawMessage)
+                        }
+
+                    }
+                    if let rawMessage = data["Player3 Stack"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.player3Stack = Int(rawMessage)
+                        }
+
+                    }
+                    if let rawMessage = data["Player4 Stack"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.player4Stack = Int(rawMessage)
+                        }
+
+                    }
+                }
+            }
             self?.inGame = true
             self?.waiting = false
             
@@ -487,7 +594,10 @@ struct ContentView: View {
     @State private var potVal = 0.00
     
     @State private var raiseVal = 0.00
+    @State private var lowerRaise = 0.00
+    @State private var upperRaise = 100.00
     
+    @State private var callVar = 0.00
     
     
     @State private var potCard1 = "backOfCard"
@@ -593,7 +703,7 @@ struct ContentView: View {
                                 
                             }
                             
-                            Text("$ \(p2Chips, specifier: "%.2f")")
+                            Text("$ \(service.player2Stack)")
                                 .bold()
                         }
                         
@@ -608,7 +718,7 @@ struct ContentView: View {
                                 Image("\(p3Card2)")
                             }
                             
-                            Text("$ \(p3Chips, specifier: "%.2f")")
+                            Text("$ \(service.player3Stack)")
                                 .bold()
                         }
                         
@@ -629,7 +739,7 @@ struct ContentView: View {
                                 Image("\(p1Card2)")
                             }
                             
-                            Text("$ \(p1Chips, specifier: "%.2f")")
+                            Text("$ \(service.player1Stack)")
                                 .bold()
                             
                         }
@@ -650,7 +760,7 @@ struct ContentView: View {
                                 Image("\(potCard1)")
                             }
                             
-                            Text("$ \(potVal, specifier: "%.2f")")
+                            Text("$ \(service.potVal)")
                                 .font(.system(size: 30, weight: .bold, design: .monospaced))
                             
                         }
@@ -670,7 +780,7 @@ struct ContentView: View {
                                 Image("\(p4Card2)")
                             }
                             
-                            Text("$ \(p4Chips, specifier: "%.2f")")
+                            Text("$ \(service.player4Stack)")
                                 .bold()
                             
                         }
@@ -679,69 +789,80 @@ struct ContentView: View {
                     }
                     
                     Spacer()
+                    if service.playerTurn == true{
+                        HStack{ // Buttons
+                            Spacer()
+                            
+                            if service.RaiseScreen == true{
+                            
+                                Button(action: {
+                                    // Raise action
+                                    
+                                    self.service.raiseSlider = true
+                                    self.service.inGame = false
+                                    
+                                    
+                                }, label: {
+                                    Text("RAISE")
+                                        .foregroundColor(Color.black)
+                                        .padding(.leading, 70)
+                                })
+                            
+                            }
+                            if service.CallScreen == true {
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    // Call action
+                                    service.sendCall()
+                                    self.service.playerTurn = false
+                                    self.service.CallScreen = false
+                                    self.service.RaiseScreen = false
+                                }, label: {
+                                    Text("CALL \(service.callAmount)")
+                                        .foregroundColor(Color.black)
+                                })
+                                
+                            }
+                            
+                            
+                            if service.CheckScreen == true {
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    // Check action
+                                    service.sendCheck()
+                                    self.service.playerTurn = false
+                                    self.service.RaiseScreen = false
+                                    self.service.CheckScreen = false
+                                }, label: {
+                                    Text("CHECK")
+                                        .foregroundColor(Color.black)
+                                })
+                                
+                                
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                // Fold action
+                                service.sendFold()
+                                self.service.playerTurn = false
+                            }, label: {
+                                Text("FOLD")
+                                    .foregroundColor(Color.black)
+                            })
+                            
+                            Spacer()
+                            Spacer()
+                        }
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        .padding(.bottom, 25)
                     
-                    HStack{ // Buttons
-                        Spacer()
-                        
-                        Button(action: {
-                            // Raise action
-                            
-                            self.service.raiseSlider = true
-                            self.service.inGame = false
-                            
-                        }, label: {
-                            Text("RAISE")
-                                .foregroundColor(Color.black)
-                                .padding(.leading, 70)
-                        })
-                        
-                        
-                        if service.noCallscreen == false {
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                // Call action
-                                service.sendCall()
-                            }, label: {
-                                Text("CALL")
-                                    .foregroundColor(Color.black)
-                            })
-                            
-                        }
-                        
-                        
-                        if service.noCheckscreen == false {
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                // Check action
-                                service.sendCheck()
-                            }, label: {
-                                Text("CHECK")
-                                    .foregroundColor(Color.black)
-                            })
-                            
-                            
-                        }
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            // Fold action
-                            service.sendFold()
-                        }, label: {
-                            Text("FOLD")
-                                .foregroundColor(Color.black)
-                        })
-                        
-                        Spacer()
-                        Spacer()
                     }
-                    .font(.system(size: 30, weight: .bold, design: .monospaced))
-                    .padding(.bottom, 25)
-                    
                     
                 } // Overall VStack
                 
@@ -758,28 +879,50 @@ struct ContentView: View {
                     
                     Spacer()
                     
-                    Slider(value: $raiseVal, in: 0.00...100.00)
+                    Slider(value: $raiseVal, in: service.minRaise...service.maxRaise)
                         .frame(width: 300)
                     
                     Text("Selected raise amount: \(raiseVal, specifier: "%.2f")")
                         .font(.system(size: 30, weight: .bold, design: .monospaced))
                     
                     Spacer()
-                    
+                    HStack{
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            
+                            self.service.inGame = true
+                            self.service.raiseSlider = false
+                            
+                            
+                            
+                            
+                        }, label: {
+                            Text("BACK TO GAME")
+                                .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        })
 
-                    Button(action: {
+                        Spacer()
                         
-                        self.service.inGame = true
-                        self.service.raiseSlider = false
-                        service.sendBet(raiseVal)
+                        Button(action: {
+                            
+                            self.service.inGame = true
+                            self.service.raiseSlider = false
+                            self.service.playerTurn = false
+                            self.service.RaiseScreen = true
+                            service.sendBet(raiseVal)
+                            
+                            
+                        }, label: {
+                            Text("SUBMIT RAISE")
+                                .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        })
                         
-                        
-                    }, label: {
-                        Text("SUBMIT RAISE")
-                            .font(.system(size: 30, weight: .bold, design: .monospaced))
-                    })
-                    
+                        Spacer()
+                    }
                     Spacer()
+                        
                     
                 }
                 
@@ -916,8 +1059,17 @@ struct ContentView: View {
                     
                     VStack{
                         
+                        Spacer()
+                        
+                        Text("Game Code: \(code)")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        
+                        Spacer()
+                        
                         Text("Waiting for host to start the game...")
                             .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        
+                        Spacer()
                         
                         if service.changed == true {
                             Text("SendBack Successful")
@@ -954,8 +1106,12 @@ struct ContentView: View {
                     
                     VStack{
                         
+
+                        
                         Text("Waiting for host to start the game...")
                             .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        
+                        
                         
                     }
                     

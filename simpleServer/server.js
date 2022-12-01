@@ -553,11 +553,21 @@ io.sockets.on('connection', function(socket) {
     socket.on('Create Game', function(data) {
         
         //onlything needed in start game is the call to the function start game
+        let stakeInt = 0;
+        switch(data[2]){
+                case "Low":
+                stakeInt = 0;
+                break;
+                case "Medium":
+                stakeInt = 1;
+                break;
+                case "High":
+                stakeInt = 2;
+                break;
+        }
         
         
-        
-        
-        round1 = new Round(data[0],data[2]);
+        round1 = new Round(data[0],stakeInt);
         round1.addPlayer(new Player(data[1], 100, socket.id));
         gameList.push(round1);
         r = gameList[0];
@@ -618,6 +628,8 @@ io.sockets.on('connection', function(socket) {
 
         if (r.allPlayers.length == 1){
             gameInfo["Player1"] = r.allPlayers[0].name;
+            
+            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
             //will need to send the cards of each player and the pot over
             
 
@@ -625,43 +637,53 @@ io.sockets.on('connection', function(socket) {
         }
         else if (r.allPlayers.length == 2){
             gameInfo["Player1"] = r.allPlayers[0].name;
+            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
 
 
             gameInfo["Player2"] = r.allPlayers[1].name;
+            gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
 
             
         }
         else if (r.allPlayers.length == 3){
             gameInfo["Player1"] = r.allPlayers[0].name;
+            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
 
 
 
             gameInfo["Player2"] = r.allPlayers[1].name;
+            gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
 
 
             gameInfo["Player3"] = r.allPlayers[2].name;
+            gameInfo["Player3 Stack"] = r.allPlayers[2].stack.toString();
 
 
         }
         else if (r.allPlayers.length == 4){
             gameInfo["Player1"] = r.allPlayers[0].name;
+            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
 
 
             gameInfo["Player2"] = r.allPlayers[1].name;
+            gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
 
 
             gameInfo["Player3"] = r.allPlayers[2].name;
+            gameInfo["Player3 Stack"] = r.allPlayers[2].stack.toString();
 
 
 
             gameInfo["Player4"] = r.allPlayers[3].name;
+            gameInfo["Player4 Stack"] = r.allPlayers[3].stack.toString();
 
 
         }
 
-        
+        console.log(gameInfo);
 
         io.sockets.emit('Start Game', gameInfo);
+        
         
         startGame();
 
@@ -740,31 +762,31 @@ io.sockets.on('connection', function(socket) {
 //Event handler for sending the player's turn
 //Function to handle that moves turns
 //
-function startGame(gameCode){
-    for (let i = 0; i < gameList.length; i ++){
-        if (gameList[i].code == gameCode) {
-            //This is the game that we want to be starting
-            gameList[i].gameRunning = true;
-            while (gameList[i].gameRunning == true){
-                //find players turn and so fourth
-                if (gameList[i].round == 0){
-                    //only want betting this round
-                    //loop through the list of players and ask for their bet
-                    for (let l = 0; l < gameList[i].userList.length; l++){
-                        var roundString = "Round ";
-                        roundString += String(gameList[i].round);
-                        io.to(gameList[i].userList[l].SocketID).emit("Player Turn", {msg: roundString});
-                    }
-                    
-                }
-                else{
-                    //want the wholething to happen
-                    
-                }
-            }
-        }
-    }
-}
+//function startGame(gameCode){
+//    for (let i = 0; i < gameList.length; i ++){
+//        if (gameList[i].code == gameCode) {
+//            //This is the game that we want to be starting
+//            gameList[i].gameRunning = true;
+//            while (gameList[i].gameRunning == true){
+//                //find players turn and so fourth
+//                if (gameList[i].round == 0){
+//                    //only want betting this round
+//                    //loop through the list of players and ask for their bet
+//                    for (let l = 0; l < gameList[i].userList.length; l++){
+//                        var roundString = "Round ";
+//                        roundString += String(gameList[i].round);
+//                        io.to(gameList[i].userList[l].SocketID).emit("Player Turn", {msg: roundString});
+//                    }
+//
+//                }
+//                else{
+//                    //want the wholething to happen
+//
+//                }
+//            }
+//        }
+//    }
+//}
 
 //r = round
 //act = required action (DealerAction enum)
@@ -783,69 +805,70 @@ function doDealerAction(act){
                 r.allPlayers[c].dealPrivateHand(r.deck);
                 console.log(r.allPlayers[c].privateHand);
                 
-                gameInfo = {};
-                if (r.allPlayers.length == 1){
-                    gameInfo["Player1"] = r.allPlayers[0].name;
-                    //will need to send the cards of each player and the pot over
-                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID()
-                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID()
-                    
-                    
                 
-                
-                }
-                else if (r.allPlayers.length == 2){
-                    
-                
-                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
-                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
-                
-                    
-                
-                    gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
-                    gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
-                }
-                else if (r.allPlayers.length == 3){
-                    
-                
-                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
-                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
-                
-                    
-                
-                    gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
-                    gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
-                
-                    
-                
-                    gameInfo["Player3 Card1"] = r.allPlayers[2].privateHand[0].getID();
-                    gameInfo["Player3 Card2"] = r.allPlayers[2].privateHand[1].getID();
-                
-                }
-                else if (r.allPlayers.length == 4){
-                    
-                
-                    gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
-                    gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
-                
-                    
-                
-                    gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
-                    gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
-                
-                    
-                
-                    gameInfo["Player3 Card1"] = r.allPlayers[2].privateHand[0].getID();
-                    gameInfo["Player3 Card2"] = r.allPlayers[2].privateHand[1].getID();
-                
-                    
-                
-                    gameInfo["Player4 Card1"] = r.allPlayers[3].privateHand[0].getID();
-                    gameInfo["Player4 Card2"] = r.allPlayers[3].privateHand[1].getID();
-                
-                        }
-                io.sockets.emit("Display UserCard Info", gameInfo);
             }
+            gameInfo = {};
+            if (r.allPlayers.length == 1){
+                gameInfo["Player1"] = r.allPlayers[0].name;
+                //will need to send the cards of each player and the pot over
+                gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID()
+                gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID()
+                
+                
+            
+            
+            }
+            else if (r.allPlayers.length == 2){
+                
+            
+                gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
+                gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
+            
+                
+            
+                gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
+                gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
+            }
+            else if (r.allPlayers.length == 3){
+                
+            
+                gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
+                gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
+            
+                
+            
+                gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
+                gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
+            
+                
+            
+                gameInfo["Player3 Card1"] = r.allPlayers[2].privateHand[0].getID();
+                gameInfo["Player3 Card2"] = r.allPlayers[2].privateHand[1].getID();
+            
+            }
+            else if (r.allPlayers.length == 4){
+                
+            
+                gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
+                gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
+            
+                
+            
+                gameInfo["Player2 Card1"] = r.allPlayers[1].privateHand[0].getID();
+                gameInfo["Player2 Card2"] = r.allPlayers[1].privateHand[1].getID();
+            
+                
+            
+                gameInfo["Player3 Card1"] = r.allPlayers[2].privateHand[0].getID();
+                gameInfo["Player3 Card2"] = r.allPlayers[2].privateHand[1].getID();
+            
+                
+            
+                gameInfo["Player4 Card1"] = r.allPlayers[3].privateHand[0].getID();
+                gameInfo["Player4 Card2"] = r.allPlayers[3].privateHand[1].getID();
+            
+                    }
+            io.sockets.emit("Display UserCard Info", gameInfo);
             break;
             case DealerAction.dealFlop:
             console.log("Dealing flop")
@@ -912,19 +935,57 @@ function doDealerAction(act){
 
 //everything done needs to be outputted to the UI via a handler, so we'll need a handler for everything like removing the player after they fold, dealing cards,changing pots, and any other changes that need to be observed in the UI. For now, all those actions are done directly, but we'll need to add calls to the handlers so that the UI gets updated too.
 
-function getPlayerInput(inputChoices, playerIndex){
-    
-        switch(inputChoices){
-                case Options.noCheck:
-                console.log("player cannot check")
-                //send the no check option to the player index because it is their turn
-                io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", "");
-                break;
-                case Options.noCall:
-                console.log("player cannot call")
-                io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
-                break;
-        }
+function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, callAmt){
+    let raiseSet = false;
+    if (maxRaiseAmt < minRaiseAmt){
+        raiseSet = true;
+        //use maxRaiseAmt as only raise option (no slider)
+    }
+    switch(inputChoices){
+            case Options.noCheck:
+            console.log("player cannot check")
+            //check if player is covered
+            if(r.allPlayers[playerIndex].stack <= callAmt){
+                //Only fold and call options available
+                dic = {};
+                dic["Call Amount"] = callAmt;
+                
+                io.to(r.allPlayers[playerIndex].socketID).emit("Fold Call Turn", dic);
+                console.log("player is covered")
+            } else {
+                //else, fold, call, and raise options available.
+                
+                console.log("player is not covered")
+                if(raiseSet){
+                    //if a player wants to raise, he must raise whole stack because min raise > stack
+                    dic = {};
+                    dic["Raise Amount"] = maxRaiseAmt;
+                    dic["Call Amount"] = callAmt;
+                    console.log("First at Raise Set");
+                    io.to(r.allPlayers[playerIndex].socketID).emit("Fold Call Raise Turn", dic);
+                } else {
+                    //raise button generates slider from minRaiseAmt to maxRaiseAmt
+                    //send the no check option to the player index because it is their turn
+                    //
+                    
+                    console.log("Second at else Set");
+                    dic = {};
+                    dic["Min Raise Amount"] = minRaiseAmt;
+                    dic["Max Raise Amount"] = maxRaiseAmt;
+                    dic["Call Amount"] = callAmt;
+                    io.to(r.allPlayers[0].socketID).emit("No Check Turn", dic);
+                    console.log(playerIndex);
+                    
+                    console.log("Last");
+                }
+            }
+            
+            break;
+            case Options.noCall:
+            console.log("player cannot call")
+            io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
+            break;
+    }
     
     //r.allPlayers[playerIndex].
 //    let input2 = 0;
@@ -988,17 +1049,24 @@ function determineAction(prevAct, player, val){
             console.log("%s checked", r.allPlayers[player].name);
             //do nothing?
         }else if(prevAct == Choice.call){
+            console.log("first potsize = %i", r.potSize);
+
             console.log("%s called", r.allPlayers[player].name);
             let callAmt = r.highestBet - r.allPlayers[player].totalBet
             r.allPlayers[player].totalBet += callAmt;
             r.allPlayers[player].stack -= callAmt;
             r.potSize += callAmt;
+            console.log("potsize = %i", r.potSize);
+            console.log("stack size = %i", r.allPlayers[i].stack);
+
+            io.sockets.emit("Update Pot Val", r.potSize);
         }else if(prevAct == Choice.raise){
             console.log("%s raised by %s", r.allPlayers[player].name, val);
             r.highestBet += val; //make sure val = raise amount, not total bet for this to be right
             r.allPlayers[player].stack -= r.highestBet;
             r.allPlayers[player].totalBet += r.highestBet;
             r.potSize += r.highestBet;
+            io.sockets.emit("Update Pot Val", r.potSize);
         }
         if(player == r.lastPlayerIndex){
             r.dealerPlayed = true;
@@ -1011,8 +1079,13 @@ function determineAction(prevAct, player, val){
             }
         }
         
-        console.log("potsize: %s", r.potSize)
-        console.log("%s's stack size: %s",r.allPlayers[player].name, r.allPlayers[player].stack)
+        console.log("potsize: %s", r.potSize);
+        io.sockets.emit("Update Pot Val", r.potSize);
+        console.log("%s's stack size: %s",r.allPlayers[player].name, r.allPlayers[player].stack);
+        settings = {};
+        settings["Player Index"] = player;
+        settings["Player Stack"] = r.allPlayers[player].stack
+        io.to(r.allPlayers[player].socketID).emit("Update Player Stack", settings);
         
         //Next, determine next action
         if(r.playersIn.length == 1){ //if only 1 player left
@@ -1057,7 +1130,7 @@ function determineAction(prevAct, player, val){
                 opt = Options.noCheck;
             }
             //GET RID OF LAST ARGUMENT, USE r.currentPlayerIndex INSIDE GETINPUT FUNCTION
-            getPlayerInput(opt, r.currentPlayerIndex);
+            getPlayerInput(opt, r.currentPlayerIndex, r.highestBet, r.allPlayers[r.currentPlayerIndex].stack - (r.highestBet-r.allPlayers[r.currentPlayerIndex].totalBet),r.highestBet - r.allPlayers[r.currentPlayerIndex].totalBet );
         }
     }
     else if(player == -1){//dealer action just happened
@@ -1080,6 +1153,11 @@ function determineAction(prevAct, player, val){
             r.allPlayers[r.currentPlayerIndex].totalBet += smallBlind;
             r.potSize += smallBlind;
             
+            settings = {};
+            settings["Player Index"] = player;
+            settings["Player Stack"] = r.allPlayers[r.currentPlayerIndex].stack
+            io.to(r.allPlayers[r.currentPlayerIndex].socketID).emit("Update Player Stack", settings);
+            
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
             
             r.allPlayers[r.currentPlayerIndex].stack -= smallBlind*2;
@@ -1088,15 +1166,23 @@ function determineAction(prevAct, player, val){
         
             r.highestBet += smallBlind*2;
             
+            settings = {};
+            settings["Player Index"] = player;
+            settings["Player Stack"] = r.allPlayers[r.currentPlayerIndex].stack
+            io.to(r.allPlayers[r.currentPlayerIndex].socketID).emit("Update Player Stack", settings);
+            
+            io.sockets.emit("Update Pot Val", r.potSize);
+
+            
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
-            getPlayerInput(Options.noCheck, r.currentPlayerIndex);
+            getPlayerInput(Options.noCheck, r.currentPlayerIndex, r.highestBet, r.allPlayers[r.currentPlayerIndex].stack - (r.highestBet-r.allPlayers[r.currentPlayerIndex].totalBet), r.highestBet - r.allPlayers[r.currentPlayerIndex].totalBet);
 
         }
         else if(prevAct == DealerAction.dealFlop || prevAct == DealerAction.dealTurn || prevAct == DealerAction.dealRiver){
             //time for another betting round.
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.dealerIndex);
             //call input function with players options
-            getPlayerInput(Options.noCall, r.currentPlayerIndex);
+            getPlayerInput(Options.noCall, r.currentPlayerIndex, r.highestBet, r.allPlayers[r.currentPlayerIndex].stack - (r.highestBet-r.allPlayers[r.currentPlayerIndex].totalBet), r.highestBet - r.allPlayers[r.currentPlayerIndex].totalBet);
         }
         else if(prevAct == DealerAction.endRound){
             console.log("Starting another round")
