@@ -918,10 +918,17 @@ function doDealerAction(act){
             console.log("Winner is %s", r.playersIn[winnerIndex].name);
             console.log("paying winner %s", r.potSize)
             r.playersIn[winnerIndex].stack += r.potSize;
+            settings = {};
+            settings["Player Index"] = player;
+            settings["Player Stack"] = r.allPlayers[player].stack
+            //update player's stack in the UI
+            io.to(r.playersIn[winnerIndex].socketID).emit("Update Player Stack", settings);
             //wait
             //await new Promise(r => setTimeout(r, 5000));
             console.log("resetting round");
             r.resetRound();
+            //reset pot val in UI
+            io.sockets.emit("Update Pot Val", r.potSize);
             break;
     }
     //call determineAction, passing as an argument the action that just happened
