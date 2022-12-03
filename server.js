@@ -1,24 +1,27 @@
 const { readFileSync } = require("fs");
 const { createServer } = require("https");
-const { Server } = require("socket.io");
+const expressApp = require("express")();
+const { Server } = require("socket.io")(secureServer);
 
-const httpServer = createServer({
-    key: readFileSync("test/key.pem"),
-    cert: readFileSync("test/cert.pem")
-    requestCert: true,
-    ca: [
-        // figure out key stuff still / talk to jason about easier method to doing it
-        // https://www.golinuxcloud.com/openssl-create-client-server-certificate/
-        // https://github.com/socketio/socket.io-client/issues/551 (potential bug that might show up later)
-        readFileSync("/client-cert.pem")
-    ]
-});
+const socket = io("https://cs275pokerserver.com");
 
-const io = new Server(httpServer, {
-cors: {
-    origin: "https://cs275pokerserver.com"
-}
-});
+const secureServer = https.createServer({
+    key: fs.readFileSync('test/server.key')
+    cert: fs.readFileSync('test/server.cert')
+}, expressApp);
+
+
+//const httpServer = createServer({
+//    key: readFileSync("test/.pem"),
+//    cert: readFileSync("test/cert.pem")
+//    requestCert: true,
+//    ca: [
+//        // figure out key stuff still / talk to jason about easier method to doing it
+//        // https://www.golinuxcloud.com/openssl-create-client-server-certificate/
+//        // https://github.com/socketio/socket.io-client/issues/551 (potential bug that might show up later)
+//        readFileSync("/client-cert.pem")
+//    ]
+//});
 
 /*
     - server sending data to players example
@@ -73,7 +76,9 @@ io.on("connection", (socket) => {
 });
 
 
-httpServer.listen(3000);
+secureServer.listen(443, () => {
+    console.log("Secure Server Started at 443")
+})
 
 //connections = [];
 //

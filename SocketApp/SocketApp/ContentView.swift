@@ -45,7 +45,12 @@ class DiffScreens: ObservableObject {
 }
 
 final class Service: ObservableObject {
-    private var manager = SocketManager(socketURL: URL(string: "http://cs275pokerserver.com/")!, config: [.log(true), .compress])
+    const socket = io("https://cs275pokerserver.com",
+                      ca: readFileSync()
+                      
+                      })
+    
+    //private var manager = SocketManager(socketURL: URL(string: "https://cs275pokerserver.com/")!, config: [.log(true), .compress])
     
     
     @Published var stringMessages = [String]()
@@ -54,6 +59,8 @@ final class Service: ObservableObject {
     init() {
         // default wont wort here
         let socket = manager.defaultSocket;
+        
+        
             socket.on(clientEvent: .connect) { (data, ack) in
                 // obviously much more todo here just basic test
                 print("Connected");
@@ -61,7 +68,6 @@ final class Service: ObservableObject {
                 // should emit the message to the server
                 // a response message should be returned after as well
                 socket.emit("NodeJS Server Port", "Hi node.js server!");
-                
                 
             }
             
