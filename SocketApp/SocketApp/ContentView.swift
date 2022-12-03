@@ -6,7 +6,7 @@
 //
 import SwiftUI
 import SocketIO
-
+import fs
 
 
 var serviceListArray: [ServiceList] = []
@@ -45,12 +45,7 @@ class DiffScreens: ObservableObject {
 }
 
 final class Service: ObservableObject {
-    const socket = io("https://cs275pokerserver.com",
-                      ca: readFileSync()
-                      
-                      })
-    
-    //private var manager = SocketManager(socketURL: URL(string: "https://cs275pokerserver.com/")!, config: [.log(true), .compress])
+    private var manager = SocketManager(socketURL: URL(string: "https://CS275PokerApp.com/")!, config: [.log(true), .compress])
     
     
     @Published var stringMessages = [String]()
