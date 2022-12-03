@@ -807,9 +807,18 @@ function doDealerAction(act){
                 
                 
             }
+            
+            
+            
             gameInfo = {};
             if (r.allPlayers.length == 1){
-                gameInfo["Player1"] = r.allPlayers[0].name;
+                //emit to each player their specific index so you are able to set the cards to the specific person
+                playerIndex = {};
+                playerIndex["Player Index"] = 1;
+                io.to(r.allPlayers[0].socketID).emit("Player Index", playerIndex);
+                
+                
+                gameInfo["Player"] = r.allPlayers[0].name;
                 //will need to send the cards of each player and the pot over
                 gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID()
                 gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID()
@@ -820,7 +829,15 @@ function doDealerAction(act){
             }
             else if (r.allPlayers.length == 2){
                 
-            
+                console.log("Emitting Players index and card info")
+                
+                playerIndex = {};
+                playerIndex["Player Index"] = 1;
+                console.log(playerIndex);
+                io.to(r.allPlayers[0].socketID).emit("Player Index", playerIndex);
+                playerIndex["Player Index"] = 2;
+                console.log(playerIndex);
+                
                 gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
                 gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
             
@@ -831,6 +848,13 @@ function doDealerAction(act){
             }
             else if (r.allPlayers.length == 3){
                 
+                playerIndex = {};
+                playerIndex["Player Index"] = 1;
+                io.to(r.allPlayers[0].socketID).emit("Player Index", playerIndex);
+                playerIndex["Player Index"] = 2;
+                io.to(r.allPlayers[1].socketID).emit("Player Index", playerIndex);
+                playerIndex["Player Index"] = 3;
+                io.to(r.allPlayers[2].socketID).emit("Player Index", playerIndex);
             
                 gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
                 gameInfo["Player1 Card2"] = r.allPlayers[0].privateHand[1].getID();
@@ -847,6 +871,16 @@ function doDealerAction(act){
             
             }
             else if (r.allPlayers.length == 4){
+                
+                playerIndex = {};
+                playerIndex["Player Index"] = 1;
+                io.to(r.allPlayers[0].socketID).emit("Player Index", playerIndex);
+                playerIndex["Player Index"] = 2;
+                io.to(r.allPlayers[1].socketID).emit("Player Index", playerIndex);
+                playerIndex["Player Index"] = 3;
+                io.to(r.allPlayers[2].socketID).emit("Player Index", playerIndex);
+                playerIndex["Player Index"] = 4;
+                io.to(r.allPlayers[3].socketID).emit("Player Index", playerIndex);
                 
             
                 gameInfo["Player1 Card1"] = r.allPlayers[0].privateHand[0].getID();
@@ -888,12 +922,25 @@ function doDealerAction(act){
             r.commonCards.push(r.deck.popTop());
             console.log("Common cards: ")
             console.log(r.commonCards);
+            gameInfo = {};
+            gameInfo["Pot Card1"] = r.commonCards[0].getID();
+            gameInfo["Pot Card2"] = r.commonCards[1].getID();
+            gameInfo["Pot Card3"] = r.commonCards[2].getID();
+            gameInfo["Pot Card4"] = r.commonCards[3].getID();
+            io.sockets.emit("Display PotCard Info", gameInfo);
             break;
             case DealerAction.dealRiver:
             console.log("Dealing river")
             r.commonCards.push(r.deck.popTop());
             console.log("Common cards: ")
             console.log(r.commonCards);
+            gameInfo = {};
+            gameInfo["Pot Card1"] = r.commonCards[0].getID();
+            gameInfo["Pot Card2"] = r.commonCards[1].getID();
+            gameInfo["Pot Card3"] = r.commonCards[2].getID();
+            gameInfo["Pot Card4"] = r.commonCards[3].getID();
+            gameInfo["Pot Card5"] = r.commonCards[4].getID();
+            io.sockets.emit("Display PotCard Info", gameInfo);
             break;
             case DealerAction.endRound:
             console.log("Round Over");
@@ -929,6 +976,7 @@ function doDealerAction(act){
             r.resetRound();
             //reset pot val in UI
             io.sockets.emit("Update Pot Val", r.potSize);
+            io.sockets.emit("Reset Pot Cards", "");
             break;
     }
     //call determineAction, passing as an argument the action that just happened
@@ -1051,7 +1099,8 @@ function determineAction(prevAct, player, val){
             r.allPlayers[player].folded = true;
             let remInd = r.playersIn.indexOf(r.allPlayers[player]);
             r.playersIn.splice(remInd,1);
-            
+            console.log(player);
+            io.sockets.emit("Player Folded", player);
         } else if(prevAct == Choice.check){
             console.log("%s checked", r.allPlayers[player].name);
             //do nothing?

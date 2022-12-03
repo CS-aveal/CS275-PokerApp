@@ -50,7 +50,7 @@ class DiffScreens: ObservableObject {
 
 
 final class Service: ObservableObject {
-    private var manager = SocketManager(socketURL: URL(string: "ws://localhost:3000")!, config: [.log(true), .compress])
+    private var manager = SocketManager(socketURL:URL(string:"ws://localhost:3000")!, config: [.log(true), .compress])
     
     
     @Published var home: Bool!
@@ -67,13 +67,19 @@ final class Service: ObservableObject {
     @Published var raiseSlider: Bool!
     @Published var foldCallRaise: Bool!
     @Published var foldCall: Bool!
+    @Published var player1Fold: Bool!
+    @Published var player2Fold: Bool!
+    @Published var player3Fold: Bool!
+    @Published var player4Fold: Bool!
     @Published var player1Name: String!
     @Published var player2Name: String!
     @Published var player3Name: String!
     @Published var player4Name: String!
+    @Published var usersName: String!
     @Published var minRaise: Double!
     @Published var maxRaise: Double!
     @Published var callAmount: Int!
+    @Published var userPlayerNum: Int!
     @Published var player1Stack: Int!
     @Published var player2Stack: Int!
     @Published var player3Stack: Int!
@@ -81,6 +87,9 @@ final class Service: ObservableObject {
     @Published var potVal: Int!
     @Published var p1Card1 = ""
     @Published var p1Card2 = ""
+    
+    @Published var userCard1 = ""
+    @Published var userCard2 = ""
     
     @Published var p2Card1 = ""
     @Published var p2Card2 = ""
@@ -92,11 +101,11 @@ final class Service: ObservableObject {
     @Published var p4Card2 = ""
     
     
-    @Published var potCard1 = ""
-    @Published var potCard2 = ""
-    @Published var potCard3 = ""
-    @Published var potCard4 = ""
-    @Published var potCard5 = ""
+    @Published var potCard1 = "backOfCard"
+    @Published var potCard2 = "backOfCard"
+    @Published var potCard3 = "backOfCard"
+    @Published var potCard4 = "backOfCard"
+    @Published var potCard5 = "backOfCard"
     
     
     @Published var stringMessages = [String]()
@@ -119,16 +128,22 @@ final class Service: ObservableObject {
         self.raiseSlider = false
         self.foldCallRaise = false
         self.playerTurn = false
+        self.player1Fold = false
+        self.player2Fold = false
+        self.player3Fold = false
+        self.player4Fold = false
         self.player1Stack = 0
         self.player2Stack = 0
         self.player3Stack = 0
         self.player4Stack = 0
         self.potVal = 0
         self.callAmount = 0
+        self.userPlayerNum = 0
         self.player1Name = ""
         self.player2Name = ""
         self.player3Name = ""
         self.player4Name = ""
+        self.usersName = ""
         
         socket.on(clientEvent: .connect) { (data, ack) in
             print("Connected")
@@ -151,6 +166,16 @@ final class Service: ObservableObject {
         socket.connect()
         
         socket.on("Create Success") { [weak self] (data, ack) in
+            if let data = data[0] as? Int{
+                DispatchQueue.main.async {
+                    self?.stringMessages.append(String(data))
+                    
+                }
+            }
+            self?.changed = true
+        }
+        
+        socket.on("Player Folded") { [weak self] (data, ack) in
             if let data = data[0] as? Int{
                 DispatchQueue.main.async {
                     self?.stringMessages.append(String(data))
@@ -282,6 +307,30 @@ final class Service: ObservableObject {
             
         }
         
+        socket.on("Reset Pot Cards") { [weak self] (data, ack) in
+            self?.potCard1 = "backOfCard"
+            self?.potCard2 = "backOfCard"
+            self?.potCard3 = "backOfCard"
+            self?.potCard4 = "backOfCard"
+            self?.potCard5 = "backOfCard"
+            
+        }
+        
+        socket.on("Player Index") { [weak self] (data, ack) in
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: Int]{
+                    if let rawMessage = data["Player Index"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.userPlayerNum = rawMessage
+                            
+                        }
+                    }
+                }
+            }
+            
+        }
+        
         socket.on("Display UserCard Info") { [weak self] (data, ack) in
             for x in 0...(data.count - 1){
                 if let data = data[x] as? [String: String]{
@@ -290,6 +339,9 @@ final class Service: ObservableObject {
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
+                            if (self?.userPlayerNum == 1){
+                                self?.userCard1 = rawMessage
+                            }
                             
                         }
                     }
@@ -297,20 +349,27 @@ final class Service: ObservableObject {
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
-                            
+                            if (self?.userPlayerNum == 1){
+                                self?.userCard2 = rawMessage
+                            }
                         }
                     }
                     if let rawMessage = data["Player2 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
-                            
+                            if (self?.userPlayerNum == 2){
+                                self?.userCard1 = rawMessage
+                            }
                         }
                     }
                     if let rawMessage = data["Player2 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
+                            if (self?.userPlayerNum == 2){
+                                self?.userCard2 = rawMessage
+                            }
                             
                         }
                     }
@@ -318,20 +377,27 @@ final class Service: ObservableObject {
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
-                            
+                            if (self?.userPlayerNum == 3){
+                                self?.userCard1 = rawMessage
+                            }
                         }
                     }
                     if let rawMessage = data["Player3 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
-                            
+                            if (self?.userPlayerNum == 3){
+                                self?.userCard2 = rawMessage
+                            }
                         }
                     }
                     if let rawMessage = data["Player4 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
+                            if (self?.userPlayerNum == 4){
+                                self?.userCard1 = rawMessage
+                            }
                             
                         }
                     }
@@ -339,6 +405,9 @@ final class Service: ObservableObject {
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.p1Card1 = rawMessage
+                            if (self?.userPlayerNum == 4){
+                                self?.userCard2 = rawMessage
+                            }
                             
                         }
                     }
@@ -399,6 +468,9 @@ final class Service: ObservableObject {
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
                             self?.player1Name = rawMessage
+                            if (rawMessage == self?.usersName){
+                                
+                            }
 
                         }
                     }
@@ -468,6 +540,8 @@ final class Service: ObservableObject {
         var codeString: String
         
         codeString = String(code)
+        
+        self.usersName = name
         
         let socket = manager.defaultSocket
         socket.connect()
@@ -585,6 +659,7 @@ struct ContentView: View {
     @State private var p3Card2 = "backOfCard"
     @State private var p4Card1 = "backOfCard"
     @State private var p4Card2 = "backOfCard"
+    @State private var greyedOutCard = "backOfCardBW"
     
     
     @State private var p1Chips = 0.00
@@ -697,10 +772,41 @@ struct ContentView: View {
                                 .bold()
                             
                             
-                            HStack{ // Two Cards
-                                Image("\(p2Card1)")
-                                Image("\(p2Card2)")
+                            if (service.userPlayerNum == 2){
                                 
+                                if (service.player2Fold){
+                                    //this will be the greyed out versions of the card
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(service.userCard1)")
+                                        Image("\(service.userCard2)")
+                                        
+                                    }
+                                }
+                                
+                            }
+                            else{
+                                if (service.player2Fold){
+                                    //greyed out version
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+                                        
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(p2Card1)")
+                                        Image("\(p2Card2)")
+                                        
+                                    }
+                                }
                             }
                             
                             Text("$ \(service.player2Stack)")
@@ -713,9 +819,36 @@ struct ContentView: View {
                             Text("\(service.player3Name)")
                                 .bold()
                             
-                            HStack{ // Two Cards
-                                Image("\(p3Card1)")
-                                Image("\(p3Card2)")
+                            if (service.userPlayerNum == 3){
+                                
+                                if (service.player3Fold){
+                                    //greyed out versions
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(service.userCard1)")
+                                        Image("\(service.userCard2)")
+                                    }
+                                }
+                            }
+                            else{
+                                if (service.player3Fold){
+                                    //greyed out version
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(p3Card1)")
+                                        Image("\(p3Card2)")
+                                    }
+                                }
                             }
                             
                             Text("$ \(service.player3Stack)")
@@ -734,10 +867,38 @@ struct ContentView: View {
                             Text("\(service.player1Name)")
                                 .bold()
                             
-                            HStack{ // Two Cards
-                                Image("\(p1Card1)")
-                                Image("\(p1Card2)")
+                            if (service.userPlayerNum == 1){
+                                if (service.player1Fold){
+                                    //greyed out versions of cards
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(service.userCard1)")
+                                        Image("\(service.userCard2)")
+                                    }
+                                }
                             }
+                            else{
+                                if (service.player1Fold){
+                                    //greyed out versions
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(p1Card1)")
+                                        Image("\(p1Card2)")
+                                    }
+                                }
+
+                            }
+                            
                             
                             Text("$ \(service.player1Stack)")
                                 .bold()
@@ -753,11 +914,11 @@ struct ContentView: View {
                             HStack{ // 5 delt cards
                                 
                                 //these will need to be service variables to be able to be changed
-                                Image("\(potCard5)")
-                                Image("\(potCard4)")
-                                Image("\(potCard3)")
-                                Image("\(potCard2)")
-                                Image("\(potCard1)")
+                                Image("\(service.potCard5)")
+                                Image("\(service.potCard4)")
+                                Image("\(service.potCard3)")
+                                Image("\(service.potCard2)")
+                                Image("\(service.potCard1)")
                             }
                             
                             Text("$ \(service.potVal)")
@@ -775,9 +936,35 @@ struct ContentView: View {
                             Text("\(service.player4Name)")
                                 .bold()
                             
-                            HStack{ // Two Cards
-                                Image("\(p4Card1)")
-                                Image("\(p4Card2)")
+                            if (service.userPlayerNum == 4){
+                                if (service.player4Fold){
+                                    //greyed out versions
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(service.userCard1)")
+                                        Image("\(service.userCard2)")
+                                    }
+                                }
+                                
+                            }
+                            else{
+                                if (service.player4Fold){
+                                    HStack{ // Two Cards
+                                        Image("\(greyedOutCard)")
+                                        Image("\(greyedOutCard)")
+                                    }
+                                }
+                                else{
+                                    HStack{ // Two Cards
+                                        Image("\(p4Card1)")
+                                        Image("\(p4Card2)")
+                                    }
+                                }
                             }
                             
                             Text("$ \(service.player4Stack)")
@@ -862,6 +1049,10 @@ struct ContentView: View {
                         .font(.system(size: 30, weight: .bold, design: .monospaced))
                         .padding(.bottom, 25)
                     
+                    }
+                    else{
+                        Spacer()
+                        Spacer()
                     }
                     
                 } // Overall VStack
