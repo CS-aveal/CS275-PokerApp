@@ -4,9 +4,11 @@ const { Server } = require("socket.io");
 
 
 const secureServer = createServer({
-    key: readFileSync("ssl/.pem"),
-    cert: readFileSync("ssl/.pem")
-    
+    key: readFileSync("ssl/server.key.pem"),
+    cert: readFileSync("ssl/server.pem")
+    ca: [
+            readFileSync("ssl/client.pem")
+    ]
 });
 
 const io = new secureServer(https, {
