@@ -84,6 +84,10 @@ final class Service: ObservableObject {
     @Published var player2Stack: Int!
     @Published var player3Stack: Int!
     @Published var player4Stack: Int!
+    @Published var player1TotalBet: Int!
+    @Published var player2TotalBet: Int!
+    @Published var player3TotalBet: Int!
+    @Published var player4TotalBet: Int!
     @Published var potVal: Int!
     @Published var p1Card1 = ""
     @Published var p1Card2 = ""
@@ -136,6 +140,10 @@ final class Service: ObservableObject {
         self.player2Stack = 0
         self.player3Stack = 0
         self.player4Stack = 0
+        self.player1TotalBet = 0
+        self.player2TotalBet = 0
+        self.player3TotalBet = 0
+        self.player4TotalBet = 0
         self.potVal = 0
         self.callAmount = 0
         self.userPlayerNum = 0
@@ -811,6 +819,9 @@ struct ContentView: View {
                             
                             Text("$ \(service.player2Stack)")
                                 .bold()
+                            
+                            Text("Total Bet: $ \(service.player2TotalBet)")
+                                .bold()
                         }
                         
                         Spacer()
@@ -852,6 +863,9 @@ struct ContentView: View {
                             }
                             
                             Text("$ \(service.player3Stack)")
+                                .bold()
+                            
+                            Text("Total Bet: $ \(service.player3TotalBet)")
                                 .bold()
                         }
                         
@@ -901,6 +915,9 @@ struct ContentView: View {
                             
                             
                             Text("$ \(service.player1Stack)")
+                                .bold()
+                            
+                            Text("Total Bet: $ \(service.player1TotalBet)")
                                 .bold()
                             
                         }
@@ -968,6 +985,9 @@ struct ContentView: View {
                             }
                             
                             Text("$ \(service.player4Stack)")
+                                .bold()
+                            
+                            Text("Total Bet: $ \(service.player4TotalBet)")
                                 .bold()
                             
                         }
