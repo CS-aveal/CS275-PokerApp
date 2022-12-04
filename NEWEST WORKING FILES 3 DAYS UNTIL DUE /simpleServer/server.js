@@ -1,15 +1,21 @@
-var express = require('express');
-var app = express();
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
+const express = require('express');
+var connections = [];
 
-connections = [];
+// const socketIO = require('socket.io');
 
-/*
- might want to create the object variable with
- */
+const PORT = process.env.PORT;
+const INDEX = '/index.html';
 
-//const prompt = require('prompt-sync')()
+const server = express()
+  .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+  .listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+// const io = socketIO(server);
+const io = require('socket.io')(server);
+
+console.log("before connection");
+
+// =============
 
 const Suit = {
     spade: 0,
@@ -513,232 +519,231 @@ gameList = [];
 //need this to just be an attribute of game because there could be multiple games going on
 gameRunning = false
 
+// =============
 
-server.listen(process.env.PORT || 3000);
-console.log('Server is running...');
-
-io.sockets.on('connection', function(socket) {
-    connections.push(socket);
-    console.log('Connect: %s sockets are connected', connections.length);
-
-    //Disconnect
-    socket.on('disconnect', function(data){
-        connections.splice(connections.indexOf(socket), 1);
-        console.log('Disconnect: %s sockets are connected', connections.length);
-    });
+io.sockets.on('connection', (socket) => {
+  console.log('Client connected');
+  connections.push(socket);
+  console.log(connections);
+  console.log(socket);
+  io.on('close', () => console.log('Client disconnected'));
     
-    socket.on('NodeJS Server Port', function(data) {
-        console.log(data);
-        io.sockets.emit('iOS Client Port', {msg: 'Hi iOS Client!'}, {msg1: ['Hello', 'World']});
-    });
+  socket.on('Heroku Server Testing', function(data) {
+    console.log(data);
+    console.log("Here at Heroku Server Testing");
+  });
     
-    
-    //cannot be a handle event start game is going to have to call a method
-    
-    
+  socket.on('disconnect', function(data){
+    connections.splice(connections.indexOf(socket), 1);
+    console.log('Disconnect: %s sockets are connected', connections.length);
+  });
     
     socket.on('Add Player', function(data) {
-        
-        //onlything needed in start game is the call to the function start game
-        
-        let player1 = new Player("heshi",100);
-        
-        gameList[0].addPlayer(player1);
-        
-        console.log(player1);
-        
-        io.to(socket.id).emit("Player Added", {msg: "Player Added"});
-        
-    });
-    socket.on('Create Game', function(data) {
-        
-        //onlything needed in start game is the call to the function start game
-        console.log(data);
-        console.log("AT CREATE GAME");
-        console.log(data[2]);
-        let stakeInt = 0;
-        switch(data[2]){
-                case "Low":
-                stakeInt = 0;
-                break;
-                case "Medium":
-                stakeInt = 1;
-                break;
-                case "High":
-                stakeInt = 2;
-                break;
-        }
-        
-        
-        round1 = new Round(data[0],stakeInt);
-        round1.addPlayer(new Player(data[1], 100, socket.id));
-        gameList.push(round1);
-        r = gameList[0];
-        console.log("HERE");
-        console.log(round1);
-        sendBackCreateSuccessful(socket.id, round1);
-        
-    });
-    socket.on('Join Game', function(data) {
-        
-        //onlything needed in start game is the call to the function start game
-        
-        round1 = new Round(100,100);
-        //gameList.push(round1);
-        
-        for (let i = 0; i < gameList.length; i++){
-            if (gameList[i].ID == data[0]){
-                for (let l = 0; l < gameList[i].playersIn.length; l++){
-                    if (gameList[i].playersIn[l].name ==  data[1]){
-                        //if the name is already in the game then send back an event saying the name is already in game
-                        sendBackJoinGameUnsuccessful(socket.id, data[0]);
+            
+            //onlything needed in start game is the call to the function start game
+            
+            let player1 = new Player("heshi",100);
+            
+            gameList[0].addPlayer(player1);
+            
+            console.log(player1);
+            
+            io.to(socket.id).emit("Player Added", {msg: "Player Added"});
+            
+        });
+        socket.on('Create Game', function(data) {
+            
+            //onlything needed in start game is the call to the function start game
+            console.log(data);
+            console.log("AT CREATE GAME");
+            console.log(data[2]);
+            let stakeInt = 0;
+            let defaultStack = 0;
+            switch(data[2]){
+                    case "Low":
+                    stakeInt = 0;
+                    defaultStack = 200;
+                    break;
+                    case "Medium":
+                    stakeInt = 1;
+                    defaultStack = 400;
+                    break;
+                    case "High":
+                    stakeInt = 2;
+                    defaultStack = 1000;
+                    break;
+            }
+            
+            
+            round1 = new Round(data[0],stakeInt);
+            round1.addPlayer(new Player(data[1], defaultStack, socket.id));
+            gameList.push(round1);
+            r = gameList[0];
+            console.log("HERE");
+            console.log(round1);
+            sendBackCreateSuccessful(socket.id, round1);
+            
+        });
+        socket.on('Join Game', function(data) {
+            
+            //onlything needed in start game is the call to the function start game
+            
+            //round1 = new Round(100,100);
+            //gameList.push(round1);
+            
+            for (let i = 0; i < gameList.length; i++){
+                if (gameList[i].ID == data[0]){
+                    for (let l = 0; l < gameList[i].playersIn.length; l++){
+                        if (gameList[i].playersIn[l].name ==  data[1]){
+                            //if the name is already in the game then send back an event saying the name is already in game
+                            sendBackJoinGameUnsuccessful(socket.id, data[0]);
+                        }
                     }
                 }
             }
-        }
-        
-        
-        for (let i = 0; i < gameList.length; i++){
-            if (gameList[i].ID == data[0]){
-                //add player into the game
-                gameList[i].addPlayer(new Player(data[1], 100));
-                console.log(gameList[i]);
-            }
-        }
-        
-        //join game was successful
-        //console.log(round1);
-        //sendBackJoinSuccessful(socket.id, round1);
-        
-    });
-    
-    
-    
-    
-    socket.on('Start Game', function(data) {
-        //this will now need to log the players turn and say it is the next persons turn
-        //do this by
-
-
-
-        //need to pass in the round which will be created once create game was called so instance is already created
-        //need to send to all of the clients all of the players names
-        //start game is going to send all of the information to be displayed on the client side
-        var gameInfo = {};
-
-        console.log(r.allPlayers[0].privateHand[0]);
-
-
-        if (r.allPlayers.length == 1){
-            gameInfo["Player1"] = r.allPlayers[0].name;
             
-            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
-            //will need to send the cards of each player and the pot over
             
-
-
-        }
-        else if (r.allPlayers.length == 2){
-            gameInfo["Player1"] = r.allPlayers[0].name;
-            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
-
-
-            gameInfo["Player2"] = r.allPlayers[1].name;
-            gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
-
+            for (let i = 0; i < gameList.length; i++){
+                if (gameList[i].ID == data[0]){
+                    //add player into the game
+                    gameList[i].addPlayer(new Player(data[1], 100));
+                    console.log(gameList[i]);
+                }
+            }
             
-        }
-        else if (r.allPlayers.length == 3){
-            gameInfo["Player1"] = r.allPlayers[0].name;
-            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
-
-
-
-            gameInfo["Player2"] = r.allPlayers[1].name;
-            gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
-
-
-            gameInfo["Player3"] = r.allPlayers[2].name;
-            gameInfo["Player3 Stack"] = r.allPlayers[2].stack.toString();
-
-
-        }
-        else if (r.allPlayers.length == 4){
-            gameInfo["Player1"] = r.allPlayers[0].name;
-            gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
-
-
-            gameInfo["Player2"] = r.allPlayers[1].name;
-            gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
-
-
-            gameInfo["Player3"] = r.allPlayers[2].name;
-            gameInfo["Player3 Stack"] = r.allPlayers[2].stack.toString();
-
-
-
-            gameInfo["Player4"] = r.allPlayers[3].name;
-            gameInfo["Player4 Stack"] = r.allPlayers[3].stack.toString();
-
-
-        }
-
-        console.log(gameInfo);
-
-        io.sockets.emit('Start Game', gameInfo);
+            //join game was successful
+            //console.log(round1);
+            //sendBackJoinSuccessful(socket.id, round1);
+            
+        });
         
         
-        startGame();
+        
+        
+        socket.on('Start Game', function(data) {
+            //this will now need to log the players turn and say it is the next persons turn
+            //do this by
 
-    });
-    
-    socket.on('Send Bet', function(data) {
-        //this will now need to log the players turn and say it is the next persons turn
-        //do this by
-        for (let i = 0; i < r.allPlayers.length; i ++){
-            if (r.allPlayers[i].socketID == socket.id){
-                //var choice = new Choice()
-                determineAction(Choice.raise, i, data[1]);
+
+
+            //need to pass in the round which will be created once create game was called so instance is already created
+            //need to send to all of the clients all of the players names
+            //start game is going to send all of the information to be displayed on the client side
+            var gameInfo = {};
+
+            console.log(r.allPlayers[0].privateHand[0]);
+
+
+            if (r.allPlayers.length == 1){
+                gameInfo["Player1"] = r.allPlayers[0].name;
+                
+                gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
+                //will need to send the cards of each player and the pot over
+                
+
+
             }
-        }
-        //need to pass in the round which will be created once create game was called so instance is already created
-        console.log(data[1]);
-        
-    });
-    
-    socket.on('Send Call', function(data) {
-        //this will now need to log the players turn and say it is the next persons turn
-        //do this by
-        for (let i = 0; i < r.allPlayers.length; i ++){
-            if (r.allPlayers[i].socketID == socket.id){
-                //var choice = new Choice()
-                //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
-                //possiby a global variable prevAct_ or something just to keep track in case they call
-                determineAction(Choice.call, i, 0);
+            else if (r.allPlayers.length == 2){
+                gameInfo["Player1"] = r.allPlayers[0].name;
+                gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
+
+
+                gameInfo["Player2"] = r.allPlayers[1].name;
+                gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
+
+                
             }
-        }
-        
-        
-    });
-    
-    socket.on('Send Fold', function(data) {
-        //this will now need to log the players turn and say it is the next persons turn
-        //do this by
-        for (let i = 0; i < r.allPlayers.length; i ++){
-            //this is weird and not sure if I should keep it
-            //FIXFIXFIXFIXFIXFIXFIXFIXFIFXIFXIFXFIXFIXFIXFIXFIXFIXFIX
-            if (r.allPlayers[i].socketID == socket.id){
-                //var choice = new Choice()
-                //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
-                //possiby a global variable prevAct_ or something just to keep track in case they call
-                //not sure how heshi wants to handle this but I will ask
-                determineAction(Choice.fold, i, 0);
+            else if (r.allPlayers.length == 3){
+                gameInfo["Player1"] = r.allPlayers[0].name;
+                gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
+
+
+
+                gameInfo["Player2"] = r.allPlayers[1].name;
+                gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
+
+
+                gameInfo["Player3"] = r.allPlayers[2].name;
+                gameInfo["Player3 Stack"] = r.allPlayers[2].stack.toString();
+
+
             }
-        }
+            else if (r.allPlayers.length == 4){
+                gameInfo["Player1"] = r.allPlayers[0].name;
+                gameInfo["Player1 Stack"] = r.allPlayers[0].stack.toString();
+
+
+                gameInfo["Player2"] = r.allPlayers[1].name;
+                gameInfo["Player2 Stack"] = r.allPlayers[1].stack.toString();
+
+
+                gameInfo["Player3"] = r.allPlayers[2].name;
+                gameInfo["Player3 Stack"] = r.allPlayers[2].stack.toString();
+
+
+
+                gameInfo["Player4"] = r.allPlayers[3].name;
+                gameInfo["Player4 Stack"] = r.allPlayers[3].stack.toString();
+
+
+            }
+
+            console.log(gameInfo);
+
+            io.sockets.emit('Start Game', gameInfo);
+            
+            
+            startGame();
+
+        });
         
+        socket.on('Send Bet', function(data) {
+            //this will now need to log the players turn and say it is the next persons turn
+            //do this by
+            for (let i = 0; i < r.allPlayers.length; i ++){
+                if (r.allPlayers[i].socketID == socket.id){
+                    //var choice = new Choice()
+                    determineAction(Choice.raise, i, data[1]);
+                }
+            }
+            //need to pass in the round which will be created once create game was called so instance is already created
+            console.log(data[1]);
+            
+        });
         
-    });
-    
+        socket.on('Send Call', function(data) {
+            //this will now need to log the players turn and say it is the next persons turn
+            //do this by
+            for (let i = 0; i < r.allPlayers.length; i ++){
+                if (r.allPlayers[i].socketID == socket.id){
+                    //var choice = new Choice()
+                    //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
+                    //possiby a global variable prevAct_ or something just to keep track in case they call
+                    determineAction(Choice.call, i, 0);
+                }
+            }
+            
+            
+        });
+        
+        socket.on('Send Fold', function(data) {
+            //this will now need to log the players turn and say it is the next persons turn
+            //do this by
+            for (let i = 0; i < r.allPlayers.length; i ++){
+                //this is weird and not sure if I should keep it
+                //FIXFIXFIXFIXFIXFIXFIXFIXFIFXIFXIFXFIXFIXFIXFIXFIXFIXFIX
+                if (r.allPlayers[i].socketID == socket.id){
+                    //var choice = new Choice()
+                    //have to figure out what the last call was so that I am able to call the determineAction I need Heshi to let me know what he wants
+                    //possiby a global variable prevAct_ or something just to keep track in case they call
+                    //not sure how heshi wants to handle this but I will ask
+                    determineAction(Choice.fold, i, 0);
+                }
+            }
+            
+            
+        });
+        
     socket.on('Send Check', function(data) {
         //this will now need to log the players turn by sending the info to determineAction
         //do this by
@@ -753,43 +758,10 @@ io.sockets.on('connection', function(socket) {
                 determineAction(Choice.check, i, 0);
             }
         }
-        
-        
     });
-    
 });
 
-
-
-//Need to test whether this will work properly or not with the automatic updating or not if not then I will need a function to start the game
-//Event handler for sending the player's turn
-//Function to handle that moves turns
-//
-//function startGame(gameCode){
-//    for (let i = 0; i < gameList.length; i ++){
-//        if (gameList[i].code == gameCode) {
-//            //This is the game that we want to be starting
-//            gameList[i].gameRunning = true;
-//            while (gameList[i].gameRunning == true){
-//                //find players turn and so fourth
-//                if (gameList[i].round == 0){
-//                    //only want betting this round
-//                    //loop through the list of players and ask for their bet
-//                    for (let l = 0; l < gameList[i].userList.length; l++){
-//                        var roundString = "Round ";
-//                        roundString += String(gameList[i].round);
-//                        io.to(gameList[i].userList[l].SocketID).emit("Player Turn", {msg: roundString});
-//                    }
-//
-//                }
-//                else{
-//                    //want the wholething to happen
-//
-//                }
-//            }
-//        }
-//    }
-//}
+// ==============
 
 //r = round
 //act = required action (DealerAction enum)
@@ -1031,7 +1003,7 @@ function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, cal
                     dic["Min Raise Amount"] = minRaiseAmt;
                     dic["Max Raise Amount"] = maxRaiseAmt;
                     dic["Call Amount"] = callAmt;
-                    io.to(r.allPlayers[0].socketID).emit("No Check Turn", dic);
+                    io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", dic);
                     console.log(playerIndex);
                     
                     console.log("Last");
@@ -1295,3 +1267,8 @@ function sendBackCreateSuccessful(socketID, round){
 function sendTest(){
     io.sockets.emit("Test Success", "");
 }
+
+// ==============
+
+
+setInterval(() => io.emit('time', new Date().toTimeString()), 1000);
