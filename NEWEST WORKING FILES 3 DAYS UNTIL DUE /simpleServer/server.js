@@ -303,6 +303,7 @@ class PlayerHand{
         }
     }
 }
+var defaultStack = 0;
 //compare 2 playerHands
 //returns 1 if first is better, 2 if second is better, 0 if tie
 //first = first playerHand, second = second playerHand
@@ -538,19 +539,6 @@ io.sockets.on('connection', (socket) => {
     console.log('Disconnect: %s sockets are connected', connections.length);
   });
     
-    socket.on('Add Player', function(data) {
-            
-            //onlything needed in start game is the call to the function start game
-            
-            let player1 = new Player("heshi",100);
-            
-            gameList[0].addPlayer(player1);
-            
-            console.log(player1);
-            
-            io.to(socket.id).emit("Player Added", {msg: "Player Added"});
-            
-        });
         socket.on('Create Game', function(data) {
             
             //onlything needed in start game is the call to the function start game
@@ -591,6 +579,7 @@ io.sockets.on('connection', (socket) => {
             //round1 = new Round(100,100);
             //gameList.push(round1);
             
+            
             for (let i = 0; i < gameList.length; i++){
                 if (gameList[i].ID == data[0]){
                     for (let l = 0; l < gameList[i].playersIn.length; l++){
@@ -606,7 +595,7 @@ io.sockets.on('connection', (socket) => {
             for (let i = 0; i < gameList.length; i++){
                 if (gameList[i].ID == data[0]){
                     //add player into the game
-                    gameList[i].addPlayer(new Player(data[1], 100));
+                    gameList[i].addPlayer(new Player(data[1], defaultStack, socket.id));
                     console.log(gameList[i]);
                 }
             }
