@@ -553,6 +553,9 @@ io.sockets.on('connection', function(socket) {
     socket.on('Create Game', function(data) {
         
         //onlything needed in start game is the call to the function start game
+        console.log(data);
+        console.log("AT CREATE GAME");
+        console.log(data[2]);
         let stakeInt = 0;
         switch(data[2]){
                 case "Low":
@@ -1209,11 +1212,19 @@ function determineAction(prevAct, player, val){
             r.allPlayers[r.currentPlayerIndex].totalBet += smallBlind;
             r.potSize += smallBlind;
             
-            settings = {};
-            settings["Player Index"] = player;
-            settings["Player Stack"] = r.allPlayers[r.currentPlayerIndex].stack
-            io.to(r.allPlayers[r.currentPlayerIndex].socketID).emit("Update Player Stack", settings);
+            console.log("Before update player total bet");
             
+            settings = {};
+            settings["Player Index"] = r.currentPlayerIndex;
+            settings["Player Stack"] = r.allPlayers[r.currentPlayerIndex].stack
+            io.sockets.emit("Update Player Stack", settings);
+            console.log(r.currentPlayerIndex);
+            console.log(r.allPlayers[r.currentPlayerIndex].totalBet);
+            settings["Total Bet"] = r.allPlayers[r.currentPlayerIndex].totalBet;
+            console.log(settings["Total Bet"]);
+            io.sockets.emit("Update Total Player Bet", settings);
+            
+            console.log("After update player total bet");
             r.currentPlayerIndex = getNextIndex(r.allPlayers, r.currentPlayerIndex);
             
             r.allPlayers[r.currentPlayerIndex].stack -= smallBlind*2;
@@ -1223,9 +1234,14 @@ function determineAction(prevAct, player, val){
             r.highestBet += smallBlind*2;
             
             settings = {};
-            settings["Player Index"] = player;
+            settings["Player Index"] = r.currentPlayerIndex;
             settings["Player Stack"] = r.allPlayers[r.currentPlayerIndex].stack
-            io.to(r.allPlayers[r.currentPlayerIndex].socketID).emit("Update Player Stack", settings);
+            io.sockets.emit("Update Player Stack", settings);
+            console.log(r.currentPlayerIndex);
+            console.log(r.allPlayers[r.currentPlayerIndex].totalBet);
+            settings["Total Bet"] = r.allPlayers[r.currentPlayerIndex].totalBet;
+            console.log(settings["Total Bet"]);
+            io.sockets.emit("Update Total Player Bet", settings);
             
             io.sockets.emit("Update Pot Val", r.potSize);
 
