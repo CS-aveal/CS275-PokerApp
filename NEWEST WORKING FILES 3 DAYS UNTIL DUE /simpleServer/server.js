@@ -1,21 +1,11 @@
-const express = require('express');
-var connections = [];
-
-// const socketIO = require('socket.io');
-
-const PORT = process.env.PORT;
-const INDEX = '/index.html';
-
-const server = express()
-  .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
-  .listen(PORT, () => console.log(`Listening on ${PORT}`));
-
-// const io = socketIO(server);
-const io = require('socket.io')(server);
-
-console.log("before connection");
+var express = require('express');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
 
 // =============
+
+connections = [];
 
 const Suit = {
     spade: 0,
@@ -303,7 +293,6 @@ class PlayerHand{
         }
     }
 }
-
 //compare 2 playerHands
 //returns 1 if first is better, 2 if second is better, 0 if tie
 //first = first playerHand, second = second playerHand
@@ -463,8 +452,7 @@ class Player{
 }
 
 class Round{
-    constructor(ID, stakes, defaultStack){
-        this.defaultStack = defaultStack;
+    constructor(ID, stakes){
         this.ID = ID;
         this.stakes = stakes;
         this.state;
@@ -521,14 +509,17 @@ gameList = [];
 //need this to just be an attribute of game because there could be multiple games going on
 gameRunning = false
 
+server.listen(process.env.PORT || 3000);
+console.log('Server is running...');
+
+
 // =============
 
-io.sockets.on('connection', (socket) => {
+io.sockets.on('connection', function(socket) {
   console.log('Client connected');
   connections.push(socket);
   console.log(connections);
   console.log(socket);
-  io.on('close', () => console.log('Client disconnected'));
     
   socket.on('Heroku Server Testing', function(data) {
     console.log(data);
@@ -540,6 +531,19 @@ io.sockets.on('connection', (socket) => {
     console.log('Disconnect: %s sockets are connected', connections.length);
   });
     
+    socket.on('Add Player', function(data) {
+            
+            //onlything needed in start game is the call to the function start game
+            
+            let player1 = new Player("heshi",100);
+            
+            gameList[0].addPlayer(player1);
+            
+            console.log(player1);
+            
+            io.to(socket.id).emit("Player Added", {msg: "Player Added"});
+            
+        });
         socket.on('Create Game', function(data) {
             
             //onlything needed in start game is the call to the function start game
@@ -547,25 +551,21 @@ io.sockets.on('connection', (socket) => {
             console.log("AT CREATE GAME");
             console.log(data[2]);
             let stakeInt = 0;
-            let defaultStack = 0;
             switch(data[2]){
                     case "Low":
                     stakeInt = 0;
-                    defaultStack = 200;
                     break;
                     case "Medium":
                     stakeInt = 1;
-                    defaultStack = 400;
                     break;
                     case "High":
                     stakeInt = 2;
-                    defaultStack = 1000;
                     break;
             }
             
             
-            round1 = new Round(data[0],stakeInt, defaultStack);
-            round1.addPlayer(new Player(data[1], defaultStack, socket.id));
+            round1 = new Round(data[0],stakeInt);
+            round1.addPlayer(new Player(data[1], 100, socket.id));
             gameList.push(round1);
             r = gameList[0];
             console.log("HERE");
@@ -577,9 +577,8 @@ io.sockets.on('connection', (socket) => {
             
             //onlything needed in start game is the call to the function start game
             
-            //round1 = new Round(100,100);
+            round1 = new Round(100,100);
             //gameList.push(round1);
-            
             
             for (let i = 0; i < gameList.length; i++){
                 if (gameList[i].ID == data[0]){
@@ -593,12 +592,10 @@ io.sockets.on('connection', (socket) => {
             }
             
             
-            
-            
             for (let i = 0; i < gameList.length; i++){
                 if (gameList[i].ID == data[0]){
                     //add player into the game
-                    gameList[i].addPlayer(new Player(data[1], r.defaultStack, socket.id));
+                    gameList[i].addPlayer(new Player(data[1], 100));
                     console.log(gameList[i]);
                 }
             }
@@ -995,7 +992,7 @@ function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, cal
                     dic["Min Raise Amount"] = minRaiseAmt;
                     dic["Max Raise Amount"] = maxRaiseAmt;
                     dic["Call Amount"] = callAmt;
-                    io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", dic);
+                    io.to(r.allPlayers[0].socketID).emit("No Check Turn", dic);
                     console.log(playerIndex);
                     
                     console.log("Last");

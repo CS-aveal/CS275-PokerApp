@@ -50,7 +50,7 @@ class DiffScreens: ObservableObject {
 
 
 final class Service: ObservableObject {
-    private var manager = SocketManager(socketURL:URL(string:"https://obscure-falls-29122.herokuapp.com/")!, config: [.log(true), .compress])
+    private var manager = SocketManager(socketURL:URL(string:"ws://localhost:3000")!, config: [.log(true), .compress])
     
     
     @Published var home: Bool!
