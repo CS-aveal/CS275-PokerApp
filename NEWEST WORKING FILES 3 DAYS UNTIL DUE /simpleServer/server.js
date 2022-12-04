@@ -303,7 +303,7 @@ class PlayerHand{
         }
     }
 }
-var defaultStack = 0;
+
 //compare 2 playerHands
 //returns 1 if first is better, 2 if second is better, 0 if tie
 //first = first playerHand, second = second playerHand
@@ -463,7 +463,8 @@ class Player{
 }
 
 class Round{
-    constructor(ID, stakes){
+    constructor(ID, stakes, defaultStack){
+        this.defaultStack = defaultStack;
         this.ID = ID;
         this.stakes = stakes;
         this.state;
@@ -563,7 +564,7 @@ io.sockets.on('connection', (socket) => {
             }
             
             
-            round1 = new Round(data[0],stakeInt);
+            round1 = new Round(data[0],stakeInt, defaultStack);
             round1.addPlayer(new Player(data[1], defaultStack, socket.id));
             gameList.push(round1);
             r = gameList[0];
@@ -592,10 +593,12 @@ io.sockets.on('connection', (socket) => {
             }
             
             
+            
+            
             for (let i = 0; i < gameList.length; i++){
                 if (gameList[i].ID == data[0]){
                     //add player into the game
-                    gameList[i].addPlayer(new Player(data[1], defaultStack, socket.id));
+                    gameList[i].addPlayer(new Player(data[1], r.defaultStack, socket.id));
                     console.log(gameList[i]);
                 }
             }
