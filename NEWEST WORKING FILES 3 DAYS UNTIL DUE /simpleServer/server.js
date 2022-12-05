@@ -1103,6 +1103,8 @@ function determineAction(prevAct, player, val){
             if(player == r.lastPlayerIndex){
 //                console.log("decremented last player index")
                 r.lastPlayerIndex = decrement(r.allPlayers, r.lastPlayerIndex);
+                sendBackPlayerFolded(r.allPlayers[player].socketID, player);
+                
             }
         }
         
@@ -1276,6 +1278,11 @@ function sendBackJoinGameUnsuccessful(socketID, round){
 
 function sendBackCreateSuccessful(socketID, round){
     io.to(socketID).emit("Create Success", round.id);
+}
+
+function sendBackPlayerFolded(socketID, playerIndex){
+    //uses round id so that you are able to send to a specifc round however probably will not use this as we don't have functionality right now for multiple games
+    io.sockets.emit("Player Folded", playerIndex);
 }
 
 function sendTest(){

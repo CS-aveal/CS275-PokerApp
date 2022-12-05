@@ -185,11 +185,19 @@ final class Service: ObservableObject {
         socket.on("Player Folded") { [weak self] (data, ack) in
             if let data = data[0] as? Int{
                 DispatchQueue.main.async {
-                    self?.stringMessages.append(String(data))
+                    switch data {
+                        case 0:
+                            self?.player1Fold = true
+                        case 1:
+                            self?.player2Fold = true
+                        case 2:
+                            self?.player3Fold = true
+                        
+                            self?.player4Fold = true
+                     }
                     
                 }
             }
-            self?.changed = true
         }
 //        socket.on("Update Total Player Bet") { [weak self] (data, ack) in
 //            var index = 0
