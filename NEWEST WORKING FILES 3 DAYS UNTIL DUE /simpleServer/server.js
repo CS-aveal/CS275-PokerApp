@@ -6,6 +6,14 @@ var io = require('socket.io')(server);
 connections = [];
 // =============
 
+function sleep(milliseconds) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
+}
+
 const Suit = {
     spade: 0,
     club: 1,
@@ -475,19 +483,22 @@ class Round{
         this.playersIn.push(player);
     }
     resetRound(){
+        console.log("RESET ROUND FROM FUNCTION");
         this.state = State.preflop;
         this.playersIn = []
         this.potSize = 0;
         this.highestBet = 0;
         this.dealerPlayed = false;
+        console.log("PRE DECK");
         this.deck = new Deck();
         this.deck.shuffle();
         this.commonCards = [];
-        this.dealerIndex = getNextIndex(this.allPlayers, this.dealerIndex);
-        this.lastPlayerIndex = this.dealerIndex;
-        this.currentPlayerIndex = getNextIndex(this.playersIn, this.dealerIndex);
+//        console.log("PRE NEXT");
+        console.log("RESET ROUND BEFORE FOR LOOP");
         for(i in this.allPlayers){
-            this.playersIn.push[this.allPlayers[i]]
+            console.log("Iteration %s", i);
+            this.playersIn.push(this.allPlayers[i]);
+            console.log(this.allPlayers[i].name);
             this.allPlayers[i].totalBet = 0;
             this.allPlayers[i].dealer = false;
             this.allPlayers[i].privateHand = [];
@@ -495,7 +506,13 @@ class Round{
             this.allPlayers[i].folded = false;
             
         }
+        console.log("PRE NEXT");
+
+        this.dealerIndex = getNextIndex(this.allPlayers, this.dealerIndex);
+        this.lastPlayerIndex = this.dealerIndex;
+        this.currentPlayerIndex = getNextIndex(this.playersIn, this.dealerIndex);
         this.allPlayers[this.dealerIndex].dealer = true;
+        console.log("========PLAYERS IN: %s", this.playersIn)
     }
 }
 
@@ -575,28 +592,34 @@ io.sockets.on('connection', function(socket) {
             
             //round1 = new Round(100,100);
             //gameList.push(round1);
+            let valid = false;
+            
+//            for (let i = 0; i < gameList.length; i++){
+//                if (gameList[i].ID == data[0]){
+//                    for (let l = 0; l < gameList[i].playersIn.length; l++){
+//                        if (gameList[i].playersIn[l].name ==  data[1]){
+//                            //if the name is already in the game then send back an event saying the name is already in game
+//                            sendBackJoinGameUnsuccessful(socket.id, data[0]);
+//                        }
+//                    }
+//                }
+//            }
             
             
             for (let i = 0; i < gameList.length; i++){
                 if (gameList[i].ID == data[0]){
-                    for (let l = 0; l < gameList[i].playersIn.length; l++){
-                        if (gameList[i].playersIn[l].name ==  data[1]){
-                            //if the name is already in the game then send back an event saying the name is already in game
-                            sendBackJoinGameUnsuccessful(socket.id, data[0]);
-                        }
+                    if (gameList[i].allPlayers.length < 4){
+                        valid = true;
+                        gameList[i].addPlayer(new Player(data[1], r.defaultStack, socket.id));
                     }
-                }
-            }
-            
-            
-            
-            
-            for (let i = 0; i < gameList.length; i++){
-                if (gameList[i].ID == data[0]){
+                    
                     //add player into the game
-                    gameList[i].addPlayer(new Player(data[1], r.defaultStack, socket.id));
+                    
 //                    console.log(gameList[i]);
                 }
+            }
+            if(!valid){
+                io.to(socket.id).emit("Invalid Code", "");
             }
             
             //join game was successful
@@ -940,12 +963,17 @@ function doDealerAction(act){
             settings["Player Index"] = emitIndex;
             settings["Player Stack"] = r.allPlayers[emitIndex].stack
             //update player's stack in the UI
-            io.to(r.allPlayers[emitIndex].socketID).emit("Update Player Stack", settings);
+            io.sockets.emit("Update Player Stack", settings);
             //wait
             //await new Promise(r => setTimeout(r, 5000));
+            io.sockets.emit("Show Cards", "");
+            sleep(5000);
+            io.sockets.emit("Update Pot Val", r.potSize);
             console.log("resetting round");
             r.resetRound();
+            io.sockets.emit("Reset", "");
             //reset pot val in UI
+            console.log(r.potSize)
             io.sockets.emit("Update Pot Val", r.potSize);
             io.sockets.emit("Reset Pot Cards", "");
             break;
@@ -987,6 +1015,7 @@ function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, cal
                     dic = {};
                     dic["Raise Amount"] = maxRaiseAmt;
                     dic["Call Amount"] = callAmt;
+                    console.log("call amount2: %s", callAmt);
 //                    console.log("First at Raise Set");
                     io.to(r.allPlayers[playerIndex].socketID).emit("Fold Call Raise Turn", dic);
                 } else {
@@ -999,6 +1028,7 @@ function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, cal
                     dic["Min Raise Amount"] = minRaiseAmt;
                     dic["Max Raise Amount"] = maxRaiseAmt;
                     dic["Call Amount"] = callAmt;
+                    console.log("call amount1: %s", callAmt);
                     io.to(r.allPlayers[playerIndex].socketID).emit("No Check Turn", dic);
 //                    console.log(playerIndex);
                     
@@ -1009,7 +1039,11 @@ function getPlayerInput(inputChoices, playerIndex, minRaiseAmt, maxRaiseAmt, cal
             break;
             case Options.noCall:
             console.log("player cannot call")
-            io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", "");
+            dic = {};
+            dic["Min Raise Amount"] = minRaiseAmt;
+            dic["Max Raise Amount"] = maxRaiseAmt;
+            
+            io.to(r.allPlayers[playerIndex].socketID).emit("No Call Turn", dic);
             break;
     }
     
@@ -1059,10 +1093,14 @@ function decrement(arr,i){
 //prevAct = Choice enum or dealerAction enum. Tells what action just occured.
 //player = player index of player that just acted. -1 if dealer.
 //val = bet/call value associated with player action.
-function determineAction(prevAct, player, val){
+function determineAction(prevAct, player, val2){
 //    if (player == 0){
 //        player = r.currentPlayerIndex;
 //    }
+    let val = parseInt(Number(val2),10);
+    if(r.highestBet.isNaN){
+        r.highestBet = 0;
+    }
     if(player >= 0){ //the last action was a player action
         //First, make update according to action taken
         if(prevAct == Choice.fold){
@@ -1090,9 +1128,9 @@ function determineAction(prevAct, player, val){
         }else if(prevAct == Choice.raise){
             console.log("%s raised by %s", r.allPlayers[player].name, val);
             r.highestBet += val; //make sure val = raise amount, not total bet for this to be right
-            r.allPlayers[player].stack -= r.highestBet;
-            r.allPlayers[player].totalBet += r.highestBet;
-            r.potSize += r.highestBet;
+            r.potSize += (r.highestBet - r.allPlayers[player].stack);
+            r.allPlayers[player].stack -= (r.highestBet - r.allPlayers[player].stack);
+            r.allPlayers[player].totalBet = r.highestBet; //changed from +=
             io.sockets.emit("Update Pot Val", r.potSize);
         }
         if(player == r.lastPlayerIndex){
@@ -1103,14 +1141,13 @@ function determineAction(prevAct, player, val){
             if(player == r.lastPlayerIndex){
 //                console.log("decremented last player index")
                 r.lastPlayerIndex = decrement(r.allPlayers, r.lastPlayerIndex);
-                sendBackPlayerFolded(r.allPlayers[player].socketID, player);
-                
             }
         }
         
-//        console.log("potsize: %s", r.potSize);
+        console.log("potsize: %s", r.potSize);
         io.sockets.emit("Update Pot Val", r.potSize);
-//        console.log("%s's stack size: %s",r.allPlayers[player].name, r.allPlayers[player].stack);
+        console.log("%s's stack size: %s",r.allPlayers[player].name, r.allPlayers[player].stack);
+        console.log("%s's totalBet size: %s",r.allPlayers[player].name, r.allPlayers[player].totalBet);
 //        console.log("allPlayers:")
 //        console.log(r.allPlayers);
 //        console.log("playersIn")
@@ -1118,7 +1155,7 @@ function determineAction(prevAct, player, val){
         settings = {};
         settings["Player Index"] = player;
         settings["Player Stack"] = r.allPlayers[player].stack
-        io.to(r.allPlayers[player].socketID).emit("Update Player Stack", settings);
+        io.sockets.emit("Update Player Stack", settings);
         settings["Total Bet"] = r.allPlayers[player].totalBet;
         io.sockets.emit("Update Total Player Bet", settings);
 //        console.log(" =============PLAYER TOTAL BET: %s", r.allPlayers[player].totalBet);
@@ -1127,13 +1164,15 @@ function determineAction(prevAct, player, val){
 //        console.log("EVALUATING HERE 1============");
 //        console.log("DEALER PLAYED: %s", r.dealerPlayed)
 //        console.log("HIGHEST BET: %s", r.highestBet)
-        for (p in r.playersIn){
-//            console.log("INDEX: %s PLAYER TOTAL BET: %s", p, r.playersIn[p].totalBet)
-        }
+//        for (p in r.playersIn){
+////            console.log("INDEX: %s PLAYER TOTAL BET: %s", p, r.playersIn[p].totalBet)
+//        }
 //        console.log("EVALUATING HERE 2 ============");
         //Next, determine next action
-        if(r.playersIn.length == 1){ //if only 1 player left
+        console.log("PlayersIn length: %s", r.playersIn.length)
+        if(r.playersIn.length <= 1){ //if only 1 player left
             //round over via fold
+            console.log("FOLDED OUT ______")
             r.state = State.over;
             doDealerAction(DealerAction.endRound);
             
@@ -1278,11 +1317,6 @@ function sendBackJoinGameUnsuccessful(socketID, round){
 
 function sendBackCreateSuccessful(socketID, round){
     io.to(socketID).emit("Create Success", round.id);
-}
-
-function sendBackPlayerFolded(socketID, playerIndex){
-    //uses round id so that you are able to send to a specifc round however probably will not use this as we don't have functionality right now for multiple games
-    io.sockets.emit("Player Folded", playerIndex);
 }
 
 function sendTest(){
