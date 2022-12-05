@@ -114,6 +114,8 @@ final class Service: ObservableObject {
     @Published var stringMessages = [String]()
     @Published var changed: Bool!
     
+    @Published var showCards: Bool!
+    
     init() {
         let socket = manager.defaultSocket
         self.changed = false
@@ -135,6 +137,7 @@ final class Service: ObservableObject {
         self.player2Fold = false
         self.player3Fold = false
         self.player4Fold = false
+        self.showCards = false
         self.player1Stack = 0
         self.player2Stack = 0
         self.player3Stack = 0
@@ -185,16 +188,18 @@ final class Service: ObservableObject {
         socket.on("Player Folded") { [weak self] (data, ack) in
             if let data = data[0] as? Int{
                 DispatchQueue.main.async {
-                    switch data {
-                        case 0:
-                            self?.player1Fold = true
-                        case 1:
-                            self?.player2Fold = true
-                        case 2:
-                            self?.player3Fold = true
-                        
-                            self?.player4Fold = true
-                     }
+                    if (data == 0){
+                        self?.player1Fold = true
+                    }
+                    if (data == 1){
+                        self?.player2Fold = true
+                    }
+                    if (data == 2){
+                        self?.player3Fold = true
+                    }
+                    if (data == 3){
+                        self?.player4Fold = true
+                    }
                     
                 }
             }
@@ -305,10 +310,31 @@ final class Service: ObservableObject {
             }
         }
         socket.on("No Call Turn") { [weak self] (data, ack) in
+            self?.CallScreen = false
             self?.playerTurn = true
             self?.CheckScreen = true
             self?.RaiseScreen = true
             //self?.inGame = false
+            
+            for x in 0...(data.count - 1){
+                if let data = data[x] as? [String: Int]{
+                    
+                    if let rawMessage = data["Min Raise Amount"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.minRaise = Double(rawMessage)
+                            
+                        }
+                    }
+                    if let rawMessage = data["Max Raise Amount"]{
+                        DispatchQueue.main.async {
+                            //self?.errorMessages.append(rawMessage)
+                            self?.maxRaise = Double(rawMessage)
+                            
+                        }
+                    }
+                }
+            }
         }
         
         
@@ -367,7 +393,6 @@ final class Service: ObservableObject {
                                 self?.player4Stack = rawMessage
                             }
                             
-                            
                         }
                     }
                 }
@@ -401,7 +426,21 @@ final class Service: ObservableObject {
             self?.potCard5 = "backOfCard"
             
         }
+        socket.on("Reset") { [weak self] (data, ack) in
+            self?.player1Fold = false
+            self?.player2Fold = false
+            self?.player3Fold = false
+            self?.player4Fold = false
+            self?.showCards = false
+        }
         
+        socket.on("Invalid Code") { [weak self] (data, ack) in
+            self?.joinGame = false
+            self?.home = true;
+            self?.waiting = false;
+            
+        }
+                
         socket.on("Player Index") { [weak self] (data, ack) in
             for x in 0...(data.count - 1){
                 if let data = data[x] as? [String: Int]{
@@ -428,13 +467,12 @@ final class Service: ObservableObject {
                             if (self?.userPlayerNum == 1){
                                 self?.userCard1 = rawMessage
                             }
-                            
                         }
                     }
                     if let rawMessage = data["Player1 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
-                            self?.p1Card1 = rawMessage
+                            self?.p1Card2 = rawMessage
                             if (self?.userPlayerNum == 1){
                                 self?.userCard2 = rawMessage
                             }
@@ -443,7 +481,7 @@ final class Service: ObservableObject {
                     if let rawMessage = data["Player2 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
-                            self?.p1Card1 = rawMessage
+                            self?.p2Card1 = rawMessage
                             if (self?.userPlayerNum == 2){
                                 self?.userCard1 = rawMessage
                             }
@@ -452,7 +490,7 @@ final class Service: ObservableObject {
                     if let rawMessage = data["Player2 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
-                            self?.p1Card1 = rawMessage
+                            self?.p2Card2 = rawMessage
                             if (self?.userPlayerNum == 2){
                                 self?.userCard2 = rawMessage
                             }
@@ -462,7 +500,7 @@ final class Service: ObservableObject {
                     if let rawMessage = data["Player3 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
-                            self?.p1Card1 = rawMessage
+                            self?.p3Card1 = rawMessage
                             if (self?.userPlayerNum == 3){
                                 self?.userCard1 = rawMessage
                             }
@@ -471,7 +509,7 @@ final class Service: ObservableObject {
                     if let rawMessage = data["Player3 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
-                            self?.p1Card1 = rawMessage
+                            self?.p3Card2 = rawMessage
                             if (self?.userPlayerNum == 3){
                                 self?.userCard2 = rawMessage
                             }
@@ -480,7 +518,7 @@ final class Service: ObservableObject {
                     if let rawMessage = data["Player4 Card1"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
-                            self?.p1Card1 = rawMessage
+                            self?.p4Card1 = rawMessage
                             if (self?.userPlayerNum == 4){
                                 self?.userCard1 = rawMessage
                             }
@@ -490,7 +528,7 @@ final class Service: ObservableObject {
                     if let rawMessage = data["Player4 Card2"]{
                         DispatchQueue.main.async {
                             //self?.errorMessages.append(rawMessage)
-                            self?.p1Card1 = rawMessage
+                            self?.p4Card2 = rawMessage
                             if (self?.userPlayerNum == 4){
                                 self?.userCard2 = rawMessage
                             }
@@ -500,6 +538,9 @@ final class Service: ObservableObject {
                 }
             }
             
+        }
+        socket.on("Show Cards") { [weak self] (data, ack) in
+            self?.showCards = true
         }
         
         socket.on("Display PotCard Info") { [weak self] (data, ack) in
@@ -862,10 +903,20 @@ struct ContentView: View {
                                 
                                 if (service.player2Fold){
                                     //this will be the greyed out versions of the card
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
-
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p2Card1)")
+                                            Image("\(service.p2Card2)")
+                                            
+                                        }
+                                    }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
                                     }
                                 }
                                 else{
@@ -880,16 +931,27 @@ struct ContentView: View {
                             else{
                                 if (service.player2Fold){
                                     //greyed out version
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
-                                        
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p2Card1)")
+                                            Image("\(service.p2Card2)")
+                                            
+                                        }
                                     }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
+                                    }
+                                    
                                 }
                                 else{
                                     HStack{ // Two Cards
                                         Image("\(p2Card1)")
-                                        Image("\(p2Card2)")
+                                        Image("\(p2Card1)")
                                         
                                     }
                                 }
@@ -912,9 +974,20 @@ struct ContentView: View {
                                 
                                 if (service.player3Fold){
                                     //greyed out versions
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p3Card1)")
+                                            Image("\(service.p3Card2)")
+                                            
+                                        }
+                                    }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
                                     }
                                 }
                                 else{
@@ -927,16 +1000,29 @@ struct ContentView: View {
                             else{
                                 if (service.player3Fold){
                                     //greyed out version
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p3Card1)")
+                                            Image("\(service.p3Card2)")
+                                            
+                                        }
+                                    }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
                                     }
                                 }
                                 else{
                                     HStack{ // Two Cards
                                         Image("\(p3Card1)")
                                         Image("\(p3Card2)")
-                                    }
+                                            
+                                        }
+                                    
                                 }
                             }
                             
@@ -962,9 +1048,20 @@ struct ContentView: View {
                             if (service.userPlayerNum == 1){
                                 if (service.player1Fold){
                                     //greyed out versions of cards
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p1Card1)")
+                                            Image("\(service.p1Card2)")
+                                            
+                                        }
+                                    }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
                                     }
                                 }
                                 else{
@@ -977,15 +1074,28 @@ struct ContentView: View {
                             else{
                                 if (service.player1Fold){
                                     //greyed out versions
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p1Card1)")
+                                            Image("\(service.p1Card2)")
+                                            
+                                        }
+                                    }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
                                     }
                                 }
                                 else{
                                     HStack{ // Two Cards
                                         Image("\(p1Card1)")
                                         Image("\(p1Card2)")
+                                            
+
                                     }
                                 }
 
@@ -1034,9 +1144,20 @@ struct ContentView: View {
                             if (service.userPlayerNum == 4){
                                 if (service.player4Fold){
                                     //greyed out versions
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p4Card1)")
+                                            Image("\(service.p4Card2)")
+                                            
+                                        }
+                                    }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
                                     }
                                 }
                                 else{
@@ -1049,15 +1170,28 @@ struct ContentView: View {
                             }
                             else{
                                 if (service.player4Fold){
-                                    HStack{ // Two Cards
-                                        Image("\(greyedOutCard)")
-                                        Image("\(greyedOutCard)")
+                                    if (service.showCards){
+                                        HStack{ // Two Cards
+                                            Image("\(service.p4Card1)")
+                                            Image("\(service.p4Card2)")
+                                            
+                                        }
+                                    }
+                                    else{
+                                        //show cards is false but has been folded
+                                        HStack{ // Two Cards
+                                            Image("\(greyedOutCard)")
+                                            Image("\(greyedOutCard)")
+                                            
+                                        }
                                     }
                                 }
                                 else{
+
                                     HStack{ // Two Cards
                                         Image("\(p4Card1)")
                                         Image("\(p4Card2)")
+                                            
                                     }
                                 }
                             }
