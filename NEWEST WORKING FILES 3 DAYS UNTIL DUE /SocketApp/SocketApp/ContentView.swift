@@ -193,44 +193,6 @@ final class Service: ObservableObject {
             self?.changed = true
         }
         socket.on("Update Total Player Bet") { [weak self] (data, ack) in
-            var index = 1
-            var totalBet = 0
-            for x in 0...(data.count - 1){
-                if let data = data[x] as? [String: Int]{
-                    
-                    if let rawMessage = data["Player Index"]{
-                        DispatchQueue.main.async {
-                            //self?.errorMessages.append(rawMessage)
-                            index = rawMessage
-                            
-                        }
-                    }
-                    if let rawMessage = data["Total Bet"]{
-                        DispatchQueue.main.async {
-                            //self?.errorMessages.append(rawMessage)
-                            totalBet = rawMessage
-                            
-                        }
-                    }
-                }
-            }
-            
-            totalBet = 10
-            if (index == 0){
-                self?.player1TotalBet = totalBet
-            }
-            if (index == 1){
-                self?.player2TotalBet = totalBet
-            }
-            if (index == 2){
-                self?.player3TotalBet = totalBet
-            }
-            if (index == 3){
-                self?.player4TotalBet = totalBet
-            }
-            
-        }
-        socket.on("Update Total Player Bet") { [weak self] (data, ack) in
             var playerIndex = 0;
             for x in 0...(data.count - 1){
                 if let data = data[x] as? [String: Int]{
