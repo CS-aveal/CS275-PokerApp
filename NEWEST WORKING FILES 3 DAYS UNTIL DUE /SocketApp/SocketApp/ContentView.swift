@@ -193,7 +193,7 @@ final class Service: ObservableObject {
             self?.changed = true
         }
         socket.on("Update Total Player Bet") { [weak self] (data, ack) in
-            var index = 1
+            var index = 0
             var totalBet = 0
             for x in 0...(data.count - 1){
                 if let data = data[x] as? [String: Int]{
@@ -215,7 +215,7 @@ final class Service: ObservableObject {
                 }
             }
             
-            totalBet = 10
+            //totalBet = 10
             if (index == 0){
                 self?.player1TotalBet = totalBet
             }
